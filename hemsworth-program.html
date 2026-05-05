@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Thor Mode">
+<title>Thor Mode — 16-Week Program</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--gold-dim:#7A6230;--bg:#0A0A08;--bg2:#111110;--bg3:#1A1A17;--bg4:#222220;--text:#F0EDE4;--text2:#A09D94;--text3:#5C5A54;--border:rgba(201,168,76,0.12);--border2:rgba(201,168,76,0.28);--safe:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg)}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:680px;margin:0 auto;padding-bottom:calc(76px + var(--safe));overflow-x:hidden}
+.hero{position:relative;padding:calc(52px + var(--safe-top)) 20px 24px;background:linear-gradient(160deg,#1C1508 0%,#0A0A08 55%);border-bottom:1px solid var(--border);overflow:hidden}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(201,168,76,0.07) 0%,transparent 65%);pointer-events:none}
+.hero-eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,14vw,80px);line-height:.88;color:var(--text);letter-spacing:.02em;margin-bottom:12px}
+.hero-title span{color:var(--gold)}
+.hero-sub{font-size:13px;color:var(--text2);line-height:1.55;max-width:340px}
+.hero-stats{display:flex;gap:24px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.hero-stat{display:flex;flex-direction:column;gap:3px}
+.hero-stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);line-height:1}
+.hero-stat-label{font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:680px;background:rgba(10,10,8,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe);z-index:100}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;background:none;border:none;cursor:pointer;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:.05em;text-transform:uppercase;transition:color .2s}
+.nav-btn.active{color:var(--gold)}
+.nav-btn svg{width:20px;height:20px}
+.tab-content{display:none;padding:18px 16px}
+.tab-content.active{display:block;animation:fadeUp .22s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.phase-pills{display:flex;gap:7px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.phase-pills::-webkit-scrollbar{display:none}
+.phase-pill{flex-shrink:0;padding:7px 14px;border-radius:100px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .18s;white-space:nowrap}
+.phase-pill.active{background:var(--gold);border-color:var(--gold);color:#0A0A08;font-weight:600}
+.phase-header{background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px}
+.phase-tag{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,.1);padding:3px 10px;border-radius:100px;margin-bottom:8px}
+.phase-title{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text);letter-spacing:.03em;margin-bottom:5px}
+.phase-desc{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:12px}
+.phase-chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg4);border:1px solid var(--border);padding:4px 10px;border-radius:6px}
+.tip{border-left:2px solid var(--gold-dim);padding:11px 14px;background:rgba(201,168,76,.04);border-radius:0 10px 10px 0;margin-bottom:16px;font-size:13px;color:var(--text2);line-height:1.6}
+.equip-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.equip-badge{font-size:11px;padding:4px 9px;border-radius:6px;border:1px solid;font-family:'DM Mono',monospace}
+.eq-rack{border-color:rgba(90,140,180,.4);color:#6AABE0;background:rgba(90,140,180,.07)}
+.eq-bar{border-color:rgba(180,120,60,.4);color:#E0A060;background:rgba(180,120,60,.07)}
+.eq-db{border-color:rgba(160,90,200,.4);color:#C080E8;background:rgba(160,90,200,.07)}
+.eq-row{border-color:rgba(60,180,120,.4);color:#60D090;background:rgba(60,180,120,.07)}
+.eq-tread{border-color:rgba(200,80,80,.4);color:#E08080;background:rgba(200,80,80,.07)}
+.eq-bike{border-color:rgba(80,160,200,.4);color:#80D0E0;background:rgba(80,160,200,.07)}
+.eq-bag{border-color:rgba(200,160,40,.4);color:#E0C040;background:rgba(200,160,40,.07)}
+.eq-bw{border-color:rgba(160,160,130,.4);color:#B0AE96;background:rgba(160,160,130,.07)}
+.eq-cable{border-color:rgba(100,200,160,.4);color:#80E8C0;background:rgba(100,200,160,.07)}
+.day-item{background:var(--bg2);border:1px solid var(--border);border-radius:14px;margin-bottom:9px;overflow:hidden;transition:border-color .2s}
+.day-item.open{border-color:var(--border2)}
+.day-header{display:flex;align-items:center;padding:14px 16px;cursor:pointer;user-select:none;gap:12px}
+.day-num{width:34px;height:34px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);flex-shrink:0}
+.day-info{flex:1}
+.day-label{font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+.day-name{font-size:15px;font-weight:500;color:var(--text)}
+.day-focus{font-size:11px;color:var(--text3);margin-top:2px}
+.day-chevron{color:var(--text3);transition:transform .22s;flex-shrink:0}
+.day-item.open .day-chevron{transform:rotate(180deg);color:var(--gold)}
+.day-body{display:none;padding:0 16px 16px}
+.day-item.open .day-body{display:block}
+.block-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 0 6px;color:var(--text3);border-bottom:1px solid rgba(255,255,255,.05);margin-bottom:2px;display:flex;align-items:center;gap:8px}
+.block-label span{flex:1}
+.block-note{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.exercise-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px}
+.exercise-row:last-child{border-bottom:none}
+.ex-left{flex:1}
+.ex-name{font-size:14px;color:var(--text);display:block}
+.ex-equip{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:1px}
+.ex-sets{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold-dim);background:rgba(201,168,76,.07);padding:4px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0;border:1px solid var(--border)}
+.ex-sets.hl{color:var(--gold);background:rgba(201,168,76,.14);border-color:var(--border2)}
+.rest-day{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 16px;text-align:center}
+.rest-day-title{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text2);margin-bottom:4px}
+.rest-day-sub{font-size:13px;color:var(--text3)}
+.cardio-section{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.cardio-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.cardio-detail{font-size:12px;color:var(--text2);line-height:1.5}
+.mtag{font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid;flex-shrink:0}
+.macro-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.macro-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:14px 10px;text-align:center}
+.macro-val{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;margin-bottom:4px}
+.macro-val.cal{color:var(--gold)}
+.macro-val.prot{color:#60C880}
+.macro-val.carb{color:#60A8E0}
+.macro-label{font-size:11px;color:var(--text3);line-height:1.3}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text);letter-spacing:.04em;margin:4px 0 12px}
+.meal-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:9px}
+.meal-time{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:3px}
+.meal-name{font-size:15px;font-weight:500;color:var(--text);margin-bottom:5px}
+.meal-desc{font-size:13px;color:var(--text2);line-height:1.5}
+.meal-macros{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.meal-macro-chip{font-family:'DM Mono',monospace;font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);color:var(--text3)}
+.rule-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px}
+.rule-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:13px}
+.rule-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.rule-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.smoothie-card{background:linear-gradient(135deg,rgba(201,168,76,.07),rgba(10,10,8,0));border:1px solid var(--border2);border-radius:14px;padding:14px 16px;margin-bottom:9px}
+.smoothie-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.roadmap-phase{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden}
+.roadmap-phase::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.roadmap-phase.p1::before{background:#5090C0}
+.roadmap-phase.p2::before{background:#50A070}
+.roadmap-phase.p3::before{background:var(--gold)}
+.roadmap-phase-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.p1 .roadmap-phase-tag{color:#70B0E0}
+.p2 .roadmap-phase-tag{color:#70C090}
+.p3 .roadmap-phase-tag{color:var(--gold)}
+.roadmap-phase-title{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text);margin-bottom:10px}
+.roadmap-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;gap:12px}
+.roadmap-row:last-child{border-bottom:none}
+.roadmap-key{color:var(--text3)}
+.roadmap-val{color:var(--text);font-weight:500;text-align:right}
+.needs-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px}
+.need-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:13px}
+.need-title{font-size:13px;font-weight:600;color:var(--gold);margin-bottom:5px}
+.need-desc{font-size:12px;color:var(--text2);line-height:1.5}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-eyebrow">Hemsworth / Luke Zocchi Method</div>
+  <div class="hero-title">THOR<br><span>MODE</span></div>
+  <div class="hero-sub">16 weeks. Bodybuilding + functional training. Hemsworth's actual methodology — heavy compound lifts, Centr 6 circuits, boxing, and never more than an hour.</div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-val">16</div><div class="hero-stat-label">Weeks</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">6</div><div class="hero-stat-label">Days/week</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">&lt;60</div><div class="hero-stat-label">Min/session</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">3</div><div class="hero-stat-label">Phases</div></div>
+  </div>
+</div>
+
+<div id="tab-workout" class="tab-content active">
+  <div class="phase-pills">
+    <button class="phase-pill active" onclick="showPhase('ph1',this)">Phase 1 — Foundation</button>
+    <button class="phase-pill" onclick="showPhase('ph2',this)">Phase 2 — Power Build</button>
+    <button class="phase-pill" onclick="showPhase('ph3',this)">Phase 3 — Cut + Define</button>
+  </div>
+
+  <div class="equip-legend">
+    <span class="equip-badge eq-rack">PRx Rack</span>
+    <span class="equip-badge eq-bar">Barbell</span>
+    <span class="equip-badge eq-cable">Cable</span>
+    <span class="equip-badge eq-db">Dumbbells</span>
+    <span class="equip-badge eq-row">Rower</span>
+    <span class="equip-badge eq-tread">Treadmill</span>
+    <span class="equip-badge eq-bike">Peloton</span>
+    <span class="equip-badge eq-bag">Bag</span>
+    <span class="equip-badge eq-bw">Bodyweight</span>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div id="ph1" class="phase-section">
+    <div class="phase-header">
+      <div class="phase-tag">Weeks 1–4 · Foundation</div>
+      <div class="phase-title">Conditioning + Fat Burn</div>
+      <div class="phase-desc">Learn the barbell lifts, build a cardio base, establish movement patterns. Centr 6-style circuits — 6 exercises, 6 reps, 6 rounds, minimal rest. This is how Hemsworth's early prep works.</div>
+      <div class="phase-chips">
+        <span class="chip">45–55 min</span><span class="chip">45–60 sec rest</span><span class="chip">RPE 7/10</span><span class="chip">Form over load</span>
+      </div>
+    </div>
+    <div class="tip">Luke Zocchi: "Use lighter weights than you think." The Centr 6 format — 6 moves, 6 reps, 6 rounds — was the most-viewed workout on Centr in 2020. It leaves you panting every time.</div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">1</div><div class="day-info"><div class="day-label">Monday</div><div class="day-name">Back + Deadlifts</div><div class="day-focus">Pull-ups → Deadlifts → Rows — Hemsworth's back foundation</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Barbell Compound</span><span class="block-note">PRx rack + barbell</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Deadlift</span><span class="ex-equip">PRx rack · king of back thickness</span></div><span class="ex-sets hl">4 × 5</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Bent-Over Row</span><span class="ex-equip">barbell · overhand grip, hinge to 45°</span></div><span class="ex-sets">4 × 8</span></div>
+        <div class="block-label"><span>B · Pull + Cable</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Pull-Ups (multi-grip bar)</span><span class="ex-equip">PRx rack · vary grip each set</span></div><span class="ex-sets hl">4 × AMRAP</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Lat Pulldown</span><span class="ex-equip">PRx high pulley + rope</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Face Pull</span><span class="ex-equip">PRx high pulley at eye level, rope</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="block-label"><span>C · Centr 6 Circuit Finisher</span><span class="block-note">6 moves × 6 reps × 6 rounds · no rest</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Renegade Row</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">6 × 6 each</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Superman Hold</span><span class="ex-equip">bodyweight · 3 sec hold at top</span></div><span class="ex-sets">6 × 6</span></div>
+        <div class="block-label"><span>D · Rower Finisher</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">500m Sprint Intervals</span><span class="ex-equip">row machine · 60 sec rest between</span></div><span class="ex-sets">4 × 500m</span></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">2</div><div class="day-info"><div class="day-label">Tuesday</div><div class="day-name">Chest + Triceps (Reverse Pyramid)</div><div class="day-focus">Hemsworth's method: start heavy, drop weight, increase reps each set</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Reverse Pyramid</span><span class="block-note">Heavy first, drop 10% each set, reps climb</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Bench Press</span><span class="ex-equip">PRx rack · sets: 5,5,8,8,12 reps</span></div><span class="ex-sets hl">5 sets</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Incline Barbell Press</span><span class="ex-equip">PRx folding bench at 30–45°</span></div><span class="ex-sets">4 × 10</span></div>
+        <div class="block-label"><span>B · Volume</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Flat Press</span><span class="ex-equip">dumbbells · full stretch at bottom</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Chest Fly</span><span class="ex-equip">PRx high pulley both sides</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Dips (PRx dip attachment)</span><span class="ex-equip">PRx rack · lean forward for chest</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="block-label"><span>C · Triceps</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Tricep Pushdown</span><span class="ex-equip">PRx high pulley + rope</span></div><span class="ex-sets">4 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Close-Grip Push-Up</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets">3 × AMRAP</span></div>
+        <div class="block-label"><span>D · Cooldown</span></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bike" style="border-color:rgba(80,160,200,.4);color:#80D0E0;background:rgba(80,160,200,.07)">Peloton</span>Zone 2 Cooldown Spin</div><div class="cardio-detail">10 min, 65–70% max HR. Low resistance, spin the lactate out. Zone 2 only.</div></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">3</div><div class="day-info"><div class="day-label">Wednesday</div><div class="day-name">Legs + Core (Squat Focus)</div><div class="day-focus">Back squats, RDL, front box jumps — Hemsworth's leg foundation</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Barbell Compound</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Back Squat</span><span class="ex-equip">PRx rack · Hemsworth's primary leg compound</span></div><span class="ex-sets hl">4 × 8–10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Romanian Deadlift</span><span class="ex-equip">barbell · hinge, feel the hamstring stretch</span></div><span class="ex-sets">3 × 10</span></div>
+        <div class="block-label"><span>B · Unilateral + Plyometric</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Reverse Lunges</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">3 × 12 each</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Front Box Jump</span><span class="ex-equip">bodyweight · Hemsworth uses these specifically</span></div><span class="ex-sets">3 × 10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Pull-Through</span><span class="ex-equip">PRx low pulley · glute-dominant hip hinge</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="block-label"><span>C · Core Circuit</span><span class="block-note">No rest between, 3 rounds</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Hanging Knee Raises</span><span class="ex-equip">PRx pull-up bar</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Ab Rollout</span><span class="ex-equip">barbell · from knees in Phase 1</span></div><span class="ex-sets">3 × 10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Plank Hold</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets">3 × 45 sec</span></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">4</div><div class="day-info"><div class="day-label">Thursday</div><div class="day-name">Shoulders + Arms (Thor Priority)</div><div class="day-focus">Zocchi: "primarily targeted shoulders and arms" for Thor's look</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Shoulder Compound</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Standing Military Press</span><span class="ex-equip">PRx rack · Hemsworth's #1 shoulder builder</span></div><span class="ex-sets hl">4 × 8</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Arnold Press</span><span class="ex-equip">dumbbells · rotate through full ROM</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="block-label"><span>B · Width Builders</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Lateral Raise</span><span class="ex-equip">dumbbells · lead with elbow, 4 sets</span></div><span class="ex-sets">4 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Rear Delt Fly</span><span class="ex-equip">PRx low pulley · cross-body pull</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Front Raise</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="block-label"><span>C · Arms</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Curl</span><span class="ex-equip">barbell · Hemsworth's go-to bicep builder</span></div><span class="ex-sets">4 × 10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Hammer Curl</span><span class="ex-equip">dumbbells · builds brachialis thickness</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Tricep Pushdown</span><span class="ex-equip">PRx high pulley + rope</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Overhead Tricep Extension</span><span class="ex-equip">dumbbells · long head stretch</span></div><span class="ex-sets">3 × 12</span></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">5</div><div class="day-info"><div class="day-label">Friday</div><div class="day-name">Full Body Functional + Boxing</div><div class="day-focus">Centr 6 circuit + Hemsworth's bag work for agility and fat burn</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Centr 6 Full-Body Circuit</span><span class="block-note">6 exercises · 6 reps · 6 rounds · no rest</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Power Clean</span><span class="ex-equip">barbell · explosive hip drive — start light</span></div><span class="ex-sets hl">6 × 6</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Thruster</span><span class="ex-equip">dumbbells · squat to press in one motion</span></div><span class="ex-sets hl">6 × 6</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Pull-Up</span><span class="ex-equip">PRx rack</span></div><span class="ex-sets hl">6 × 6</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Push-Up</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets hl">6 × 6</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Swing</span><span class="ex-equip">dumbbells · hip hinge, explosive</span></div><span class="ex-sets hl">6 × 6</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Burpee</span><span class="ex-equip">bodyweight · full extension at top</span></div><span class="ex-sets hl">6 × 6</span></div>
+        <div class="block-label"><span>B · Boxing / Bag Work</span><span class="block-note">3-min rounds · 1 min rest · 5 rounds</span></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bag" style="border-color:rgba(200,160,40,.4);color:#E0C040;background:rgba(200,160,40,.07)">Bag</span>Rounds 1–3: Jab-Cross Combinations</div><div class="cardio-detail">Jab-cross-hook-cross (1-2-3-2). Stay light on feet. Move around the bag. 15 combos/min. Hemsworth uses boxing for agility and conditioning between film roles.</div></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bag" style="border-color:rgba(200,160,40,.4);color:#E0C040;background:rgba(200,160,40,.07)">Bag</span>Rounds 4–5: Power Shots + All-Out</div><div class="cardio-detail">Round 4: heavy single shots from hips. Round 5: max effort full combinations. Don't stop moving. This is Hemsworth's favourite way to end a conditioning session.</div></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">6</div><div class="day-info"><div class="day-label">Saturday</div><div class="day-name">Active Cardio + Mobility</div><div class="day-focus">Zone 2 cardio — Hemsworth surfs on off days, this is the equivalent</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-tread" style="border-color:rgba(200,80,80,.4);color:#E08080;background:rgba(200,80,80,.07)">Treadmill</span>20-min Incline Walk</div><div class="cardio-detail">3.5 mph, 4–5% incline, 65–70% max HR. Zone 2 — you can hold a full conversation. Steady-state fat burn without taxing recovery.</div></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-row" style="border-color:rgba(60,180,120,.4);color:#60D090;background:rgba(60,180,120,.07)">Rower</span>15-min Easy Recovery Row</div><div class="cardio-detail">Easy pace, 24 strokes/min, damper at 4–5. Focus on form — legs, back, arms in sequence. Flushes lactic acid from the week's training.</div></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bike" style="border-color:rgba(80,160,200,.4);color:#80D0E0;background:rgba(80,160,200,.07)">Peloton</span>Optional: 40-min Zone 2 Ride</div><div class="cardio-detail">Substitute for treadmill + rower if preferred. Low output, Matt Wilpers Zone 2 class recommended. Hemsworth's non-surfing cardio approach.</div></div>
+        <div class="block-label"><span>Mobility — always do this</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Dead hang from PRx bar</span><span class="ex-equip">PRx pull-up bar · spinal decompression</span></div><span class="ex-sets">3 × 45 sec</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">World's greatest stretch</span><span class="ex-equip">bodyweight · Zocchi mobility staple</span></div><span class="ex-sets">2 × 5 each</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Thoracic rotation</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets">2 × 10 each</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Hip flexor stretch (couch)</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets">2 × 60 sec</span></div>
+      </div>
+    </div>
+
+    <div class="rest-day"><div class="rest-day-title">Sunday — Full Rest</div><div class="rest-day-sub">Zocchi: "Muscle growth only happens when we rest and get enough sleep." 7–9 hours.</div></div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div id="ph2" class="phase-section" style="display:none">
+    <div class="phase-header">
+      <div class="phase-tag">Weeks 5–10 · Mass Build</div>
+      <div class="phase-title">Centr Power — Thor Size Protocol</div>
+      <div class="phase-desc">Hemsworth's actual bulking method for Thor: Love and Thunder. "4 sets, 8–12 reps per exercise. Compound lifts with heavy weights and moderate to high volume." Add weight every week.</div>
+      <div class="phase-chips">
+        <span class="chip">55–65 min</span><span class="chip">60–90 sec rest</span><span class="chip">RPE 8/10</span><span class="chip">+5% load/week</span>
+      </div>
+    </div>
+    <div class="tip">Hemsworth: "The first part is a classic bodybuilder-type workout — high-weight, low-rep moves to build size. The second part is functional and CrossFit-inspired work to shift stubborn fat while maintaining muscle."</div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">1</div><div class="day-info"><div class="day-label">Monday</div><div class="day-name">Chest — 8-Set Protocol</div><div class="day-focus">Hemsworth's reported chest day: 8 bench sets, reverse pyramid</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Bench Press — 8 Sets</span><span class="block-note">Sets 1–2: 4 reps heavy / Sets 3–4: 8 reps / Sets 5–8: 10–12 reps</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Bench Press</span><span class="ex-equip">PRx rack · Hemsworth's #1 chest builder</span></div><span class="ex-sets hl">8 total sets</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Incline Barbell Press</span><span class="ex-equip">PRx folding bench at 30°</span></div><span class="ex-sets">4 × 10</span></div>
+        <div class="block-label"><span>B · Volume</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Incline Fly</span><span class="ex-equip">dumbbells · deep stretch, light weight</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Crossover</span><span class="ex-equip">PRx high pulley · squeeze at centre</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Dips to failure</span><span class="ex-equip">PRx dip attachment · lean forward</span></div><span class="ex-sets">3 × AMRAP</span></div>
+        <div class="block-label"><span>C · Triceps</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Tricep Pushdown (rope)</span><span class="ex-equip">PRx high pulley</span></div><span class="ex-sets">4 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Overhead Tricep Ext.</span><span class="ex-equip">dumbbells · seated</span></div><span class="ex-sets">3 × 12</span></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">2</div><div class="day-info"><div class="day-label">Tuesday</div><div class="day-name">Back + Deadlifts (Thor Thickness)</div><div class="day-focus">Pull-ups → Deadlift → Rows — the back that makes the Thor silhouette</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Heavy Pull + Hinge</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Pull-Ups</span><span class="ex-equip">PRx rack · wide 2 sets, neutral 2 sets</span></div><span class="ex-sets hl">5 × AMRAP</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Deadlift</span><span class="ex-equip">PRx rack · 5 reps, heavy and controlled</span></div><span class="ex-sets hl">4 × 5</span></div>
+        <div class="block-label"><span>B · Row Volume</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Bent-Over Row</span><span class="ex-equip">barbell · strict form, chest up</span></div><span class="ex-sets">4 × 10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Single-Arm Row</span><span class="ex-equip">dumbbells · full range, elbow past hip</span></div><span class="ex-sets">3 × 12 each</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Seated Row</span><span class="ex-equip">PRx low pulley · V-handle</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="block-label"><span>C · Bicep Volume</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Curl</span><span class="ex-equip">barbell</span></div><span class="ex-sets">4 × 10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Hammer Curl</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Curl</span><span class="ex-equip">PRx low pulley · constant tension</span></div><span class="ex-sets">3 × 15</span></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">3</div><div class="day-info"><div class="day-label">Wednesday</div><div class="day-name">Legs — Squat + Rower Finisher</div><div class="day-focus">Squat-heavy, add rower interval finisher for conditioning</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Squat + Hinge Compound</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Back Squat</span><span class="ex-equip">PRx rack · add weight each set</span></div><span class="ex-sets hl">5 × 5,5,8,8,10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Romanian Deadlift</span><span class="ex-equip">barbell · slow eccentric</span></div><span class="ex-sets">4 × 10</span></div>
+        <div class="block-label"><span>B · Unilateral</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Bulgarian Split Squat</span><span class="ex-equip">dumbbells · rear foot on bench</span></div><span class="ex-sets">4 × 10 each</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Walking Lunges</span><span class="ex-equip">dumbbells · Hemsworth uses high-rep lunges specifically</span></div><span class="ex-sets">3 × 12 each</span></div>
+        <div class="block-label"><span>C · Isolation + Finisher</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Hip Thrust</span><span class="ex-equip">barbell · upper back on bench</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Calf Raise (in rack)</span><span class="ex-equip">PRx rack + barbell · slow tempo</span></div><span class="ex-sets">4 × 20</span></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-row" style="border-color:rgba(60,180,120,.4);color:#60D090;background:rgba(60,180,120,.07)">Rower</span>Interval Finisher</div><div class="cardio-detail">1 min all-out row, 1 min rest × 5 rounds. This is the conditioning element Hemsworth pairs with leg training.</div></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">4</div><div class="day-info"><div class="day-label">Thursday</div><div class="day-name">Shoulders (Asgardian Width)</div><div class="day-focus">Zocchi: shoulders are Thor's priority. Build the boulder shoulders.</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · OHP Main Lift</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Standing OHP</span><span class="ex-equip">PRx rack · Hemsworth's main shoulder compound</span></div><span class="ex-sets hl">5 × 5,5,8,8,10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Arnold Press</span><span class="ex-equip">dumbbells · seated, rotate at top</span></div><span class="ex-sets">4 × 12</span></div>
+        <div class="block-label"><span>B · Width + Rear Delt</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Lateral Raise</span><span class="ex-equip">dumbbells · strict form, 4 sets</span></div><span class="ex-sets">4 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Lateral Raise</span><span class="ex-equip">PRx low pulley · cross-body</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Cable Face Pull</span><span class="ex-equip">PRx high pulley + rope · rear delt + external rotation</span></div><span class="ex-sets">4 × 20</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Rear Delt Fly</span><span class="ex-equip">dumbbells · bent over</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="block-label"><span>C · Trap + Farmer Carry</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Shrug</span><span class="ex-equip">barbell · heavy, full elevation</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Farmer Carry</span><span class="ex-equip">dumbbells · Hemsworth functional staple</span></div><span class="ex-sets">3 × 30m</span></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">5</div><div class="day-info"><div class="day-label">Friday</div><div class="day-name">Full Body Power + Peloton HIIT</div><div class="day-focus">CrossFit-inspired Hemsworth circuit + bike intervals</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Power Compound</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Power Clean</span><span class="ex-equip">barbell · explosive, full body — Hemsworth staple</span></div><span class="ex-sets hl">5 × 5</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Push Press</span><span class="ex-equip">PRx rack · slight dip and drive, heavier than OHP</span></div><span class="ex-sets">4 × 6</span></div>
+        <div class="block-label"><span>B · Functional Circuit</span><span class="block-note">4 rounds · 30 sec rest between rounds</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Bear Crawl</span><span class="ex-equip">bodyweight · Zocchi's functional movement staple</span></div><span class="ex-sets">4 × 20m</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Clean and Press</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">4 × 10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Renegade Row</span><span class="ex-equip">dumbbells · plank, alternate arms</span></div><span class="ex-sets">4 × 10 each</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Burpee to Pull-Up</span><span class="ex-equip">PRx rack · jump up and grab bar</span></div><span class="ex-sets">4 × 8</span></div>
+        <div class="block-label"><span>C · Peloton HIIT</span></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bike" style="border-color:rgba(80,160,200,.4);color:#80D0E0;background:rgba(80,160,200,.07)">Peloton</span>20/10 Tabata Intervals</div><div class="cardio-detail">20 sec max effort, 10 sec easy × 8 rounds = 4 min. Rest 2 min. Repeat 3 times (~18 min). Hemsworth's CrossFit-inspired bike conditioning.</div></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">6</div><div class="day-info"><div class="day-label">Saturday</div><div class="day-name">Boxing + Bag + Treadmill Sprints</div><div class="day-focus">Hemsworth: "boxing and Muay Thai drills" for athleticism and conditioning</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Bag Work — 5 × 3-min rounds</span><span class="block-note">1 min rest between rounds</span></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bag" style="border-color:rgba(200,160,40,.4);color:#E0C040;background:rgba(200,160,40,.07)">Bag</span>Rounds 1–2: Combinations</div><div class="cardio-detail">Jab-cross-hook-cross. Stay light on feet. Move around the bag. 15 combos/min target.</div></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bag" style="border-color:rgba(200,160,40,.4);color:#E0C040;background:rgba(200,160,40,.07)">Bag</span>Rounds 3–4: Power Shots</div><div class="cardio-detail">Heavy single shots — right cross, left hook alternating. Drive from the hips. 5 sec rest, 5 sec explosion.</div></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bag" style="border-color:rgba(200,160,40,.4);color:#E0C040;background:rgba(200,160,40,.07)">Bag</span>Round 5: All-Out Fury</div><div class="cardio-detail">Max effort, full combinations, don't stop. Hemsworth's "Muay Thai drills" — add knees into the bag this round.</div></div>
+        <div class="block-label"><span>B · Treadmill Sprint Intervals</span></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-tread" style="border-color:rgba(200,80,80,.4);color:#E08080;background:rgba(200,80,80,.07)">Treadmill</span>Sprint Protocol</div><div class="cardio-detail">Warm up 3 min. Then: 30 sec sprint (8–10 mph), 60 sec walk × 10 rounds. Cool down 3 min. Total ~20 min post-bag work.</div></div>
+      </div>
+    </div>
+
+    <div class="rest-day"><div class="rest-day-title">Sunday — Full Rest</div><div class="rest-day-sub">Eat at maintenance. Sleep 8+ hours. Protein still hits 180g+.</div></div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div id="ph3" class="phase-section" style="display:none">
+    <div class="phase-header">
+      <div class="phase-tag">Weeks 11–16 · Cut + Define</div>
+      <div class="phase-title">Strip Fat, Reveal the God</div>
+      <div class="phase-desc">Keep all heavy compounds to preserve muscle. Add supersets for density. Ramp all cardio machines. Calories drop, protein stays locked in at 180g+.</div>
+      <div class="phase-chips">
+        <span class="chip">50–60 min</span><span class="chip">30–45 sec rest</span><span class="chip">RPE 8–9/10</span><span class="chip">Superset everything</span>
+      </div>
+    </div>
+    <div class="tip">Keep Phase 2 weights. The calorie deficit cuts the fat — lighter weights lose the muscle. Pair push/pull supersets to cut session time while keeping intensity maxed.</div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">1</div><div class="day-info"><div class="day-label">Monday</div><div class="day-name">Chest + Back Superset</div><div class="day-focus">Push + Pull paired — double work, half rest time</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Compound Superset</span><span class="block-note">No rest between A and B. 90 sec after each pair.</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">A: Barbell Bench Press</span><span class="ex-equip">PRx rack · keep it heavy</span></div><span class="ex-sets hl">4 × 8</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">B: Barbell Bent-Over Row</span><span class="ex-equip">barbell · immediate after bench</span></div><span class="ex-sets hl">4 × 10</span></div>
+        <div class="block-label"><span>B · Mid Volume Superset</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">A: Incline DB Press</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">B: Pull-Ups</span><span class="ex-equip">PRx rack</span></div><span class="ex-sets">3 × AMRAP</span></div>
+        <div class="block-label"><span>C · Cable Superset Finisher</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">A: Cable Fly</span><span class="ex-equip">PRx high pulley</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">B: Cable Seated Row</span><span class="ex-equip">PRx low pulley</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="block-label"><span>D · Rower HIIT</span></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-row" style="border-color:rgba(60,180,120,.4);color:#60D090;background:rgba(60,180,120,.07)">Rower</span>250m Sprint Intervals</div><div class="cardio-detail">8 × 250m at max effort. 60 sec rest between. Track your 250m split — aim to maintain it across all 8. Brutal but highly effective for fat burn.</div></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">2</div><div class="day-info"><div class="day-label">Tuesday</div><div class="day-name">Legs — Heavy + Peloton Burn</div><div class="day-focus">Keep squats and deads heavy. Plyometrics + bike for fat burn after</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Heavy Compound</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Back Squat</span><span class="ex-equip">PRx rack</span></div><span class="ex-sets hl">4 × 6</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Deadlift</span><span class="ex-equip">barbell</span></div><span class="ex-sets hl">3 × 5</span></div>
+        <div class="block-label"><span>B · Superset — Quad + Glute</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">A: DB Bulgarian Split Squat</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">4 × 10 each</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">B: Barbell Hip Thrust</span><span class="ex-equip">barbell</span></div><span class="ex-sets">4 × 15</span></div>
+        <div class="block-label"><span>C · Plyometric Circuit</span><span class="block-note">3 rounds, 30 sec rest</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Box Jump</span><span class="ex-equip">bodyweight · Hemsworth-specific plyometric</span></div><span class="ex-sets">3 × 10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Jump Squat</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets">3 × 15</span></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bike" style="border-color:rgba(80,160,200,.4);color:#80D0E0;background:rgba(80,160,200,.07)">Peloton</span>15-min Power Zone Burn</div><div class="cardio-detail">Immediately after legs. Zone 3–4 effort. Glycogen-depleted muscles burn fat preferentially. Any 15-min HIIT ride.</div></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">3</div><div class="day-info"><div class="day-label">Wednesday</div><div class="day-name">Shoulders + Arms Supersets</div><div class="day-focus">Bi/Tri supersets maintain mass from Phase 2</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Shoulder Main</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Standing OHP</span><span class="ex-equip">PRx rack · keep heavy, 5 reps</span></div><span class="ex-sets hl">4 × 5</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">DB Arnold Press</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="block-label"><span>B · Width Superset</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">A: DB Lateral Raise</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">4 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">B: Cable Face Pull</span><span class="ex-equip">PRx high pulley + rope</span></div><span class="ex-sets">4 × 20</span></div>
+        <div class="block-label"><span>C · Arm Superset</span><span class="block-note">Bicep + Tricep back-to-back · 60 sec after each pair</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">A: Barbell Curl</span><span class="ex-equip">barbell</span></div><span class="ex-sets">4 × 10</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">B: Cable Tricep Pushdown</span><span class="ex-equip">PRx high pulley</span></div><span class="ex-sets">4 × 15</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">A: Hammer Curl</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">3 × 12</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">B: DB Overhead Extension</span><span class="ex-equip">dumbbells</span></div><span class="ex-sets">3 × 12</span></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">4</div><div class="day-info"><div class="day-label">Thursday</div><div class="day-name">All-Machine Cardio Circuit</div><div class="day-focus">Hemsworth's conditioning day — treadmill, rower, bag, bike in sequence</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>Full Cardio Circuit — 55 min total</span></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-tread" style="border-color:rgba(200,80,80,.4);color:#E08080;background:rgba(200,80,80,.07)">Treadmill</span>Sprint Protocol — 15 min</div><div class="cardio-detail">3 min warm-up. 8 × (30 sec sprint 9–11 mph / 90 sec walk). 2 min cool down.</div></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-row" style="border-color:rgba(60,180,120,.4);color:#60D090;background:rgba(60,180,120,.07)">Rower</span>Steady State — 15 min</div><div class="cardio-detail">Moderate pace, 24–26 spm, damper 5. Active recovery between treadmill and bag work. Focus on breathing.</div></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bag" style="border-color:rgba(200,160,40,.4);color:#E0C040;background:rgba(200,160,40,.07)">Bag</span>5 × 3-min Boxing Rounds</div><div class="cardio-detail">Combinations + Muay Thai (knees round 5). Hemsworth's trainer: 15 min bag, 15 min pads, 15 min jump rope — this adapts that to the bag alone.</div></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bike" style="border-color:rgba(80,160,200,.4);color:#80D0E0;background:rgba(80,160,200,.07)">Peloton</span>10-min Zone 1 Cool Down</div><div class="cardio-detail">Low resistance. Heart rate dropping. Spin the legs out. This is recovery, not effort.</div></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">5</div><div class="day-info"><div class="day-label">Friday</div><div class="day-name">Full Body — "200s" + Power</div><div class="day-focus">Hemsworth's "200 reps" workout: 200 reps of every exercise</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="block-label"><span>A · Heavy Power Anchor</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Power Clean</span><span class="ex-equip">barbell · explosive</span></div><span class="ex-sets hl">5 × 5</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Barbell Push Press</span><span class="ex-equip">PRx rack</span></div><span class="ex-sets">4 × 6</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Pull-Ups</span><span class="ex-equip">PRx rack</span></div><span class="ex-sets hl">4 × AMRAP</span></div>
+        <div class="block-label"><span>B · "200s" Circuit</span><span class="block-note">Hemsworth: 200 reps each exercise, break as needed</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Push-Ups</span><span class="ex-equip">bodyweight · sets of 20–25</span></div><span class="ex-sets hl">200 total</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Air Squats</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets hl">200 total</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Sit-Ups</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets hl">200 total</span></div>
+        <div class="block-label"><span>C · 2000m Time Trial Benchmark</span></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-row" style="border-color:rgba(60,180,120,.4);color:#60D090;background:rgba(60,180,120,.07)">Rower</span>2000m Time Trial</div><div class="cardio-detail">Row 2000m as fast as possible. Track your time weekly — this is your Phase 3 fitness benchmark. Sub-8 min is excellent performance.</div></div>
+      </div>
+    </div>
+
+    <div class="day-item" onclick="toggleDay(this)">
+      <div class="day-header"><div class="day-num">6</div><div class="day-info"><div class="day-label">Saturday</div><div class="day-name">Long Zone 2 + Mobility</div><div class="day-focus">Steady fat burn, active recovery, thorough mobility</div></div><svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="day-body">
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-tread" style="border-color:rgba(200,80,80,.4);color:#E08080;background:rgba(200,80,80,.07)">Treadmill</span>30-min Incline Walk</div><div class="cardio-detail">3.5–4 mph, 4–6% incline. Zone 2. Body burns fat preferentially after 20 min at this intensity. Hemsworth's off-day cardio approach.</div></div>
+        <div class="cardio-section"><div class="cardio-title"><span class="mtag eq-bike" style="border-color:rgba(80,160,200,.4);color:#80D0E0;background:rgba(80,160,200,.07)">Peloton</span>OR: 30-min Zone 2 Endurance Ride</div><div class="cardio-detail">Substitute for treadmill if preferred. Low resistance, conversational pace. Same fat-burning Zone 2 effect.</div></div>
+        <div class="block-label"><span>Mandatory Mobility</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Dead hang</span><span class="ex-equip">PRx bar · spinal decompression</span></div><span class="ex-sets">3 × 45 sec</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">World's greatest stretch</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets">2 × 6 each</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Couch stretch (hip flexor)</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets">2 × 90 sec</span></div>
+        <div class="exercise-row"><div class="ex-left"><span class="ex-name">Thoracic rotation</span><span class="ex-equip">bodyweight</span></div><span class="ex-sets">2 × 10 each</span></div>
+      </div>
+    </div>
+
+    <div class="rest-day"><div class="rest-day-title">Sunday — Full Rest</div><div class="rest-day-sub">By week 14 the physique emerges. Protein at 180g+. Sleep is non-negotiable.</div></div>
+  </div>
+</div>
+
+<!-- NUTRITION -->
+<div id="tab-nutrition" class="tab-content">
+  <div class="tip">Zocchi: "Food is more important than training." Hemsworth ate 6 meals per day for Thor: Love and Thunder, every 2–3 hours — 4,500 cal/day at peak bulk. You're targeting 2,200–2,600 depending on phase.</div>
+  <div class="section-title">Daily targets</div>
+  <div class="macro-row">
+    <div class="macro-card"><div class="macro-val cal">2,400</div><div class="macro-label">Calories<br>adjust by phase</div></div>
+    <div class="macro-card"><div class="macro-val prot">180–200g</div><div class="macro-label">Protein<br>priority #1</div></div>
+    <div class="macro-card"><div class="macro-val carb">180–220g</div><div class="macro-label">Carbs<br>around training</div></div>
+  </div>
+  <div class="smoothie-card">
+    <div class="smoothie-label">Hemsworth's official Thor smoothie</div>
+    <div class="meal-name">The Thor Smoothie</div>
+    <div class="meal-desc">Almond milk, 1 banana, dates, almond butter, pinch of salt, ice, chocolate protein powder. Zocchi: "The salt helps you hold fluids after training, dates are a natural sweetener, almond butter provides healthy fat." Often replaced one of his 6 daily meals.</div>
+  </div>
+  <div class="section-title">6-meal daily structure</div>
+  <div class="meal-card"><div class="meal-time">6:30am — Meal 1</div><div class="meal-name">Power oats + scrambled eggs</div><div class="meal-desc">1 cup oats, banana, mixed berries, 4 whole eggs. Eggs are the morning protein staple — complete amino profile and fast to prepare.</div><div class="meal-macros"><span class="meal-macro-chip">~600 cal</span><span class="meal-macro-chip">40g protein</span></div></div>
+  <div class="meal-card"><div class="meal-time">9:30am — Meal 2</div><div class="meal-name">Grilled chicken + brown rice + veg</div><div class="meal-desc">200g grilled chicken breast, 3/4 cup brown rice, steamed broccoli. Chicken breast is Hemsworth's #1 protein source — lean, versatile, easy to prep in bulk.</div><div class="meal-macros"><span class="meal-macro-chip">~550 cal</span><span class="meal-macro-chip">50g protein</span></div></div>
+  <div class="meal-card"><div class="meal-time">Pre-workout (45 min before) — Meal 3</div><div class="meal-name">Banana + whey protein</div><div class="meal-desc">1 banana, 30g whey with water or oat milk. Fast carbs for energy, protein to prime muscle protein synthesis before lifting.</div><div class="meal-macros"><span class="meal-macro-chip">~300 cal</span><span class="meal-macro-chip">32g protein</span></div></div>
+  <div class="meal-card"><div class="meal-time">Post-workout (within 30 min) — Meal 4</div><div class="meal-name">Thor Smoothie or whey + rice</div><div class="meal-desc">The Thor Smoothie (above) OR 30g whey + 2 rice cakes with honey. Fast protein + carbs in the recovery window.</div><div class="meal-macros"><span class="meal-macro-chip">~380 cal</span><span class="meal-macro-chip">35g protein</span></div></div>
+  <div class="meal-card"><div class="meal-time">2:30pm — Meal 5</div><div class="meal-name">Salmon + sweet potato</div><div class="meal-desc">180g salmon (Hemsworth's favourite for omega-3s), 1 medium sweet potato, spinach with olive oil. Fish is his afternoon protein of choice.</div><div class="meal-macros"><span class="meal-macro-chip">~580 cal</span><span class="meal-macro-chip">45g protein</span></div></div>
+  <div class="meal-card"><div class="meal-time">7:00pm — Meal 6 (big dinner)</div><div class="meal-name">Lean beef or chicken thigh + veg</div><div class="meal-desc">Zocchi: Hemsworth had "a big dinner at home after training." 200g lean beef or chicken, roasted vegetables, 1/2 cup rice on training days only.</div><div class="meal-macros"><span class="meal-macro-chip">~650 cal</span><span class="meal-macro-chip">48g protein</span></div></div>
+  <div class="meal-card"><div class="meal-time">9:30pm — Optional Meal 7</div><div class="meal-name">Cottage cheese or casein</div><div class="meal-desc">200g cottage cheese with cinnamon, or casein shake. Slow-digesting protein feeds muscles through the night.</div><div class="meal-macros"><span class="meal-macro-chip">~200 cal</span><span class="meal-macro-chip">25g protein</span></div></div>
+  <div class="divider"></div>
+  <div class="section-title">Zocchi's rules</div>
+  <div class="rule-grid">
+    <div class="rule-card"><div class="rule-title">Protein first</div><div class="rule-desc">180g+ every day without fail. Zocchi: "Plan nutrition like you plan workouts."</div></div>
+    <div class="rule-card"><div class="rule-title">Eat every 2–3 hrs</div><div class="rule-desc">6 meals keeps metabolism elevated and muscles in constant anabolic state.</div></div>
+    <div class="rule-card"><div class="rule-title">Carbs around training</div><div class="rule-desc">Most carbs before and after workouts. Fewer carbs at dinner on rest days.</div></div>
+    <div class="rule-card"><div class="rule-title">Cheat meal weekly</div><div class="rule-desc">Zocchi: "At least once a week for sure." Hemsworth's go-tos: pizza, burgers, ice cream.</div></div>
+    <div class="rule-card"><div class="rule-title">Variety + whole foods</div><div class="rule-desc">Rotate proteins — chicken, fish, beef, eggs. "Chris wouldn't eat the same thing every day."</div></div>
+    <div class="rule-card"><div class="rule-title">3–4L water daily</div><div class="rule-desc">500ml first thing every morning before coffee. The Thor smoothie's salt helps retention post-training.</div></div>
+  </div>
+</div>
+
+<!-- ROADMAP -->
+<div id="tab-roadmap" class="tab-content">
+  <div class="section-title">16-week roadmap</div>
+  <div class="roadmap-phase p1">
+    <div class="roadmap-phase-tag">Phase 1 — Weeks 1–4</div>
+    <div class="roadmap-phase-title">Foundation</div>
+    <div class="roadmap-row"><span class="roadmap-key">Goal</span><span class="roadmap-val">Fat loss + movement quality</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Training style</span><span class="roadmap-val">Centr 6 circuits + compound intro</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Calories</span><span class="roadmap-val">Deficit ~2,100–2,200</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Expected result</span><span class="roadmap-val">5–8 lbs fat lost, base strength built</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Key focus</span><span class="roadmap-val">Squat, bench, deadlift form</span></div>
+  </div>
+  <div class="roadmap-phase p2">
+    <div class="roadmap-phase-tag">Phase 2 — Weeks 5–10</div>
+    <div class="roadmap-phase-title">Centr Power Mass Build</div>
+    <div class="roadmap-row"><span class="roadmap-key">Goal</span><span class="roadmap-val">Maximum muscle growth</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Training style</span><span class="roadmap-val">Heavy barbell splits + functional circuits</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Calories</span><span class="roadmap-val">Slight surplus ~2,600–2,800</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Expected result</span><span class="roadmap-val">5–8 lbs lean muscle added</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Key focus</span><span class="roadmap-val">Add weight every single week</span></div>
+  </div>
+  <div class="roadmap-phase p3">
+    <div class="roadmap-phase-tag">Phase 3 — Weeks 11–16</div>
+    <div class="roadmap-phase-title">Cut + Define</div>
+    <div class="roadmap-row"><span class="roadmap-key">Goal</span><span class="roadmap-val">Strip fat, reveal the muscle</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Training style</span><span class="roadmap-val">Supersets + ramped cardio machines</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Calories</span><span class="roadmap-val">Deficit ~2,000–2,200</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Expected result</span><span class="roadmap-val">7–12 lbs fat lost, defined physique</span></div>
+    <div class="roadmap-row"><span class="roadmap-key">Key focus</span><span class="roadmap-val">Keep weights heavy — deficit cuts, not weights</span></div>
+  </div>
+  <div class="divider"></div>
+  <div class="section-title">Your equipment advantage</div>
+  <div class="needs-grid">
+    <div class="need-card"><div class="need-title">PRx Pro Rack</div><div class="need-desc">Barbell squats, bench, deadlifts, OHP, pull-ups, dips. Full compound movement library. The foundation of Thor's physique.</div></div>
+    <div class="need-card"><div class="need-title">PRx Cable System</div><div class="need-desc">Lat pulldown, face pulls, cable fly, tricep pushdowns, cable rows, lateral raises. Constant-tension muscle work unavailable with free weights alone.</div></div>
+    <div class="need-card"><div class="need-title">Row Machine</div><div class="need-desc">500m sprints, 2000m time trials, steady-state cardio. Full body, zero impact. One of the best fat-burning and conditioning tools available.</div></div>
+    <div class="need-card"><div class="need-title">Peloton Bike</div><div class="need-desc">Zone 2 endurance, Tabata intervals, post-leg burn sets. Hemsworth's CrossFit-inspired HIIT conditioning applied to the bike.</div></div>
+    <div class="need-card"><div class="need-title">Treadmill</div><div class="need-desc">Sprint intervals, incline walks, active recovery. Used for both HIIT fat-burning and Zone 2 steady-state cardio sessions.</div></div>
+    <div class="need-card"><div class="need-title">Punching Bag</div><div class="need-desc">Hemsworth's boxing and Muay Thai drills. 5 × 3-min rounds = 15 min intense conditioning. Builds the agility for Thor's fight scenes.</div></div>
+  </div>
+  <div class="section-title">Supplements</div>
+  <div class="rule-grid">
+    <div class="rule-card"><div class="rule-title">Whey protein</div><div class="rule-desc">Post-workout and between meals. Easiest way to hit 180g+ daily. Hemsworth uses shakes to replace meals when needed.</div></div>
+    <div class="rule-card"><div class="rule-title">Creatine (5g/day)</div><div class="rule-desc">Most researched supplement available. Take daily with water. Directly increases strength output and muscle volume.</div></div>
+    <div class="rule-card"><div class="rule-title">Vitamin D3 + K2</div><div class="rule-desc">Testosterone support, bone density, muscle function. 2,000–4,000 IU D3 daily with a fat-containing meal.</div></div>
+    <div class="rule-card"><div class="rule-title">Omega-3 fish oil</div><div class="rule-desc">Reduces inflammation and soreness. 2–3g EPA+DHA daily. Hemsworth gets his from salmon — supplement if diet doesn't match.</div></div>
+  </div>
+  <div class="tip">Hemsworth: "The heavy weightlifting is still based on your classic isolated muscle groupings. Now there's a lot more functional flexibility and movement training. It's more rounded and versatile." That is exactly what this program builds.</div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="showTab('workout',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="3" rx="1.5"/><rect x="3" y="11" width="18" height="3" rx="1.5"/><rect x="3" y="16" width="18" height="3" rx="1.5"/></svg>
+    Workouts
+  </button>
+  <button class="nav-btn" onclick="showTab('nutrition',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+    Nutrition
+  </button>
+  <button class="nav-btn" onclick="showTab('roadmap',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Roadmap
+  </button>
+</nav>
+
+<script>
+function showTab(id,btn){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');if(btn)btn.classList.add('active')}
+function showPhase(id,btn){document.querySelectorAll('.phase-section').forEach(s=>s.style.display='none');document.querySelectorAll('.phase-pill').forEach(b=>b.classList.remove('active'));document.getElementById(id).style.display='block';btn.classList.add('active')}
+function toggleDay(el){el.classList.toggle('open')}
+</script>
+</body>
+</html>
