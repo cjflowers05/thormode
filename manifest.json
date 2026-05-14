@@ -1,0 +1,18 @@
+{
+  "name": "Thor Mode",
+  "short_name": "Thor Mode",
+  "description": "16-Week Training Program",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0A08",
+  "theme_color": "#0A0A08",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
