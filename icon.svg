@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect width="180" height="180" rx="36" fill="#0A0A08"/>
+  <!-- Hammer head -->
+  <rect x="32" y="34" width="116" height="74" rx="10" fill="#C9A84C"/>
+  <!-- Inset face detail -->
+  <rect x="44" y="46" width="92" height="50" rx="6" fill="#0A0A08" opacity="0.18"/>
+  <!-- Cross-guard -->
+  <rect x="24" y="100" width="132" height="14" rx="7" fill="#7A6230"/>
+  <!-- Handle -->
+  <rect x="76" y="114" width="28" height="44" rx="7" fill="#C9A84C"/>
+  <!-- Strap loop -->
+  <rect x="70" y="154" width="40" height="10" rx="5" fill="#7A6230"/>
+</svg>
