@@ -2414,12 +2414,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 
   <!-- Recipe search + AI generate -->
-  <div style="position:relative;margin-bottom:12px">
-    <input id="rb-search" type="text" placeholder="Search recipes or ask AI to generate one…"
-      class="log-field" style="width:100%;padding-left:36px;font-size:14px"
-      oninput="rbSearchInput(this.value)" autocomplete="off">
-    <div style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px;pointer-events:none">⌕</div>
-    <div id="rb-search-clear" onclick="rbSearchClear()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;cursor:pointer;width:20px;height:20px;border-radius:50%;background:var(--bg4);align-items:center;justify-content:center">✕</div>
+  <div style="display:flex;gap:7px;align-items:center;margin-bottom:12px">
+    <div style="position:relative;flex:1">
+      <input id="rb-search" type="text" placeholder="Search recipes or ask AI to generate one…"
+        class="log-field" style="width:100%;padding-left:36px;font-size:14px"
+        oninput="rbSearchInput(this.value)" autocomplete="off">
+      <div style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px;pointer-events:none">⌕</div>
+      <div id="rb-search-clear" onclick="rbSearchClear()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;cursor:pointer;width:20px;height:20px;border-radius:50%;background:var(--bg4);align-items:center;justify-content:center">✕</div>
+    </div>
+    <button class="mic-btn" onclick="startVoice('recipe-search',this)" title="Search by voice">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1a4 4 0 0 1 4 4v5a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1 16.93V20H8v2h8v-2h-3v-2.07A8 8 0 0 0 20 10h-2a6 6 0 0 1-12 0H4a8 8 0 0 0 7 7.93z"/></svg>
+    </button>
   </div>
   <!-- AI generate result area -->
   <div id="rb-ai-result" style="display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:13px;padding:14px;margin-bottom:14px"></div>
@@ -2487,6 +2492,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div id="rv-ingredients-list"></div>
     </div>
     <div id="rv-panel-instructions" class="rv-panel" style="display:none">
+      <!-- Cook Mode bar -->
+      <div id="rv-cook-bar" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:11px">
+        <button id="rv-cook-mic" class="mic-btn" onclick="rbCookModeToggle()" title="Hands-free cook mode — say 'next', 'back', 'repeat'">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1a4 4 0 0 1 4 4v5a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1 16.93V20H8v2h8v-2h-3v-2.07A8 8 0 0 0 20 10h-2a6 6 0 0 1-12 0H4a8 8 0 0 0 7 7.93z"/></svg>
+        </button>
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text2);letter-spacing:.05em">COOK MODE</div>
+          <div id="rv-cook-status" style="font-size:10px;color:var(--text3)">Tap mic — say "next", "back", "repeat"</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button onclick="rbCookStep(-1)" style="width:32px;height:32px;border-radius:8px;background:var(--bg4);border:1px solid var(--border);color:var(--text2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="rbCookStep(1)"  style="width:32px;height:32px;border-radius:8px;background:var(--bg4);border:1px solid var(--border);color:var(--text2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">›</button>
+        </div>
+      </div>
       <div id="rv-instructions-list"></div>
     </div>
     <div id="rv-panel-notes" class="rv-panel" style="display:none">
@@ -8082,6 +8101,8 @@ function rbParseOcrText(raw) {
 function openRecipeView(id) {
   const r = rbRecipes.find(r => r.id == id); // loose equality: handles string IDs ('b5') and numeric IDs (Date.now())
   if (!r) return;
+  if (typeof rbCookModeStop === 'function') rbCookModeStop();
+  rbCookCursor = 0;
   rbViewingId = id;
 
   document.getElementById('rv-tag').textContent = r.tag + (r.imported ? ' · Imported' : '');
@@ -8135,6 +8156,7 @@ function openRecipeView(id) {
 }
 
 function closeRecipeView() {
+  if (typeof rbCookModeStop === 'function') rbCookModeStop();
   document.getElementById('recipeViewModal').classList.remove('open');
   unlockBodyScroll();
   rbViewingId = null;
@@ -14795,11 +14817,13 @@ function _voiceStop() {
 function _voiceApply(mode, raw) {
   const text = raw.trim();
   switch (mode) {
-    case 'nutrition':    _voiceParseNutrition(text);  break;
-    case 'food-search':  _voiceFillSearch(text);       break;
-    case 'sets':         _voiceParseSets(text);         break;
-    case 'journal':      _voiceFillJournal(text);       break;
-    case 'meal-entry':   _voiceFillMealEntry(text);     break;
+    case 'nutrition':      _voiceParseNutrition(text);    break;
+    case 'food-search':    _voiceFillSearch(text);         break;
+    case 'sets':           _voiceParseSets(text);           break;
+    case 'journal':        _voiceFillJournal(text);         break;
+    case 'meal-entry':     _voiceFillMealEntry(text);       break;
+    case 'recipe-search':  _voiceFillRecipeSearch(text);    break;
+    case 'cook':           _voiceHandleCookCommand(text);   break;
   }
 }
 
@@ -14870,6 +14894,108 @@ function _voiceFillMealEntry(text) {
   const el = document.getElementById('me-textarea');
   if (el) { el.value = text; if (typeof meAutoResize === 'function') meAutoResize(el); }
   showToast('🎤 Ready — tap Identify Foods', 'success');
+}
+
+function _voiceFillRecipeSearch(text) {
+  const el = document.getElementById('rb-search');
+  if (el) { el.value = text; if (typeof rbSearchInput === 'function') rbSearchInput(text); }
+  showToast('🎤 ' + text, 'success');
+}
+
+function _voiceHandleCookCommand(text) {
+  const t = text.toLowerCase().trim();
+  if (/\bnext\b|forward|continue|move on/.test(t))       rbCookStep(1);
+  else if (/\bback\b|\bprev(ious)?\b|go back/.test(t))   rbCookStep(-1);
+  else if (/\brepeat\b|\bagain\b|re-?read/.test(t))       rbCookRepeat();
+  else if (/\bingredient/.test(t))                        switchRvTab('ingredients', document.querySelector('.rv-tab'));
+  else if (/\bstart\b|\bbegin\b|\bfirst\b|step one/.test(t)) rbCookGoTo(0);
+  else if (/\bstop\b|\bdone\b|\bfinish\b|exit/.test(t))  rbCookModeStop();
+  else showToast('🎤 Say: next · back · repeat · ingredients · stop', 'info');
+
+  // Stay listening in cook mode
+  if (rbCookActive) setTimeout(() => startVoice('cook', document.getElementById('rv-cook-mic')), 400);
+}
+
+// ── Cook Mode ────────────────────────────────────────────────
+let rbCookActive  = false;
+let rbCookCursor  = 0;
+
+function rbCookModeToggle() {
+  rbCookActive ? rbCookModeStop() : rbCookModeStart();
+}
+
+function rbCookModeStart() {
+  rbCookActive = true;
+  rbCookCursor = 0;
+  const mic = document.getElementById('rv-cook-mic');
+  if (mic) mic.classList.add('recording');
+  rbCookSetStatus('Listening… say "next", "back", "repeat"');
+  rbCookHighlight(rbCookCursor);
+  rbSpeak(rbCookCurrentText());
+  startVoice('cook', mic);
+}
+
+function rbCookModeStop() {
+  rbCookActive = false;
+  const mic = document.getElementById('rv-cook-mic');
+  if (mic) mic.classList.remove('recording');
+  rbCookSetStatus('Tap mic — say "next", "back", "repeat"');
+  if (_voiceRec) { try { _voiceRec.stop(); } catch(e){} }
+  window.speechSynthesis?.cancel();
+}
+
+function rbCookStep(dir) {
+  const steps = document.querySelectorAll('#rv-instructions-list .rv-step');
+  const max = steps.length - 1;
+  rbCookCursor = Math.max(0, Math.min(max, rbCookCursor + dir));
+  rbCookHighlight(rbCookCursor);
+  rbCookSetStatus(`Step ${rbCookCursor + 1} of ${steps.length}`);
+  rbSpeak(rbCookCurrentText());
+}
+
+function rbCookGoTo(idx) {
+  const steps = document.querySelectorAll('#rv-instructions-list .rv-step');
+  rbCookCursor = Math.max(0, Math.min(steps.length - 1, idx));
+  rbCookHighlight(rbCookCursor);
+  rbCookSetStatus(`Step ${rbCookCursor + 1} of ${steps.length}`);
+  rbSpeak(rbCookCurrentText());
+}
+
+function rbCookRepeat() {
+  rbSpeak(rbCookCurrentText());
+}
+
+function rbCookCurrentText() {
+  const steps = document.querySelectorAll('#rv-instructions-list .rv-step');
+  const el = steps[rbCookCursor];
+  if (!el) return '';
+  return `Step ${rbCookCursor + 1}. ` + (el.querySelector('.rv-step-text')?.textContent || '');
+}
+
+function rbCookHighlight(idx) {
+  document.querySelectorAll('#rv-instructions-list .rv-step').forEach((el, i) => {
+    el.style.background    = i === idx ? 'rgba(201,168,76,.08)' : '';
+    el.style.borderLeft    = i === idx ? '3px solid var(--gold)' : '3px solid transparent';
+    el.style.paddingLeft   = i === idx ? '10px' : '';
+    el.style.borderRadius  = i === idx ? '6px' : '';
+    el.style.transition    = 'all .2s';
+    if (i === idx) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
+
+function rbCookSetStatus(msg) {
+  const el = document.getElementById('rv-cook-status');
+  if (el) el.textContent = msg;
+}
+
+function rbSpeak(text) {
+  if (!text || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.rate  = 0.92;
+  utt.pitch = 1;
+  utt.lang  = 'en-US';
+  window.speechSynthesis.speak(utt);
 }
 </script>
 
