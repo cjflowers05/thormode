@@ -361,6 +361,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .fm-source-usda{background:rgba(91,200,118,.12);color:#5BC876}
 .fm-source-nix{background:rgba(90,174,224,.12);color:#5AAEE0}
 .fm-source-saved{background:rgba(201,168,76,.12);color:var(--gold)}
+.fm-source-off{background:rgba(224,122,95,.12);color:#E07A5F}
 /* API settings modal */
 .api-settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1100;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s}
 .api-settings-overlay.open{opacity:1;pointer-events:all}
@@ -983,6 +984,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .session-rpe-btn .rpe-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)}
 .session-rpe-btn.active .rpe-num{color:var(--gold)}
 .session-rpe-saved{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.04em;width:100%}
+.session-notes-row{padding:8px 14px 10px;border-top:1px solid var(--border)}
+.session-notes-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 11px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.5;resize:none;min-height:56px;outline:none;transition:border-color .15s;box-sizing:border-box}
+.session-notes-input:focus{border-color:rgba(201,168,76,.4)}
+.session-notes-input::placeholder{color:var(--text3)}
+.photo-add-btn{flex:1;padding:10px 6px;border-radius:10px;background:rgba(157,138,207,.1);border:1px solid rgba(157,138,207,.25);color:#9D8ACF;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;text-align:center;display:block}
+.photo-add-btn:active{background:rgba(157,138,207,.2)}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.photo-entry{border-radius:10px;overflow:hidden;position:relative;aspect-ratio:.75;background:var(--bg3);border:1px solid var(--border)}
+.photo-entry img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-entry-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));padding:6px 7px 5px;font-family:'DM Mono',monospace;font-size:8px;color:#fff;letter-spacing:.06em}
+.photo-entry-del{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.photo-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.photo-compare-slot{border-radius:10px;overflow:hidden;position:relative;aspect-ratio:.75;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+.photo-compare-slot img{width:100%;height:100%;object-fit:cover}
+.photo-compare-lbl{position:absolute;top:6px;left:7px;font-family:'DM Mono',monospace;font-size:8px;color:#fff;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:4px;letter-spacing:.06em}
+.photo-tab-bar{display:flex;gap:6px;margin-bottom:10px}
+.photo-tab{flex:1;padding:7px 4px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;text-align:center}
+.photo-tab.active{background:rgba(157,138,207,.15);border-color:rgba(157,138,207,.4);color:#9D8ACF}
 .skip-reason-row{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px 12px;border-top:1px solid var(--border)}
 .skip-reason-btn{font-family:'DM Mono',monospace;font-size:10px;padding:6px 11px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;letter-spacing:.04em;transition:all .15s}
 .skip-reason-btn:active{border-color:rgba(220,80,80,.45);background:rgba(220,80,80,.08);color:#E07070}
@@ -3020,6 +3039,38 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <button onclick="waterUndo()" style="padding:11px 14px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer">UNDO</button>
       </div>
       <div id="water-week" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <!-- ── BODY PHOTO PROGRESS ── -->
+  <div class="well-section" id="ws-photos">
+    <div class="well-section-header" onclick="wellToggle('photos')">
+      <div style="display:flex;align-items:center;flex:1">
+        <div class="well-icon" style="background:rgba(157,138,207,.1);border:1px solid rgba(157,138,207,.2)">📸</div>
+        <div>
+          <div class="well-title">Progress Photos</div>
+          <div class="well-sub" id="photos-header-sub">Tap to add or compare</div>
+        </div>
+      </div>
+      <span class="well-chev">▾</span>
+    </div>
+    <div class="well-body">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Add a photo — stored privately on your device</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <label class="photo-add-btn" style="flex:1">
+          📷 FRONT
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="photoSave('front',this)">
+        </label>
+        <label class="photo-add-btn" style="flex:1">
+          📷 SIDE
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="photoSave('side',this)">
+        </label>
+        <label class="photo-add-btn" style="flex:1">
+          📷 BACK
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="photoSave('back',this)">
+        </label>
+      </div>
+      <div id="photos-compare-wrap"></div>
     </div>
   </div>
 
@@ -6348,7 +6399,7 @@ function getRecentFoods() {
     if (!seen.has(food.n)) {
       seen.add(food.n);
       recent.push(food);
-      if (recent.length >= 8) break;
+      if (recent.length >= 15) break;
     }
   }
   return recent;
@@ -6419,10 +6470,19 @@ function parseUsdaFood(item) {
   const srv = item.servingSize
     ? (hh ? hh + ' (' + item.servingSize + (item.servingSizeUnit || 'g') + ')' : item.servingSize + (item.servingSizeUnit || 'g'))
     : '100g';
+  // Detect brand: explicit fields first, then ALL-CAPS last segment (SR Legacy format)
+  let brand = item.brandOwner || item.brandName || '';
+  if (!brand) {
+    const rawParts = item.description.split(',').map(p => p.trim());
+    const last = rawParts[rawParts.length - 1];
+    if (rawParts.length > 2 && /^[A-Z]{2,}(\s[A-Z]{2,})*$/.test(last)) {
+      brand = last.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+    }
+  }
   return {
     id: 'usda-' + item.fdcId,
-    n: item.description.replace(/,\s*/g, ', ').replace(/\b\w/g, l => l.toUpperCase()),
-    brand: item.brandOwner || item.brandName || '',
+    n: cleanUsdaName(item.description, brand),
+    brand: brand,
     s: srv, c: cal, p: prot, b: carb, f: fat, w: water, source: 'usda'
   };
 }
@@ -6635,8 +6695,26 @@ function renderFoodResultsWithSearch(query) {
   const loader = document.createElement('div');
   loader.id = 'fm-api-loader';
   loader.style.cssText = 'text-align:center;padding:16px;color:var(--text3);font-family:monospace;font-size:11px';
-  loader.textContent = '⏳ Searching USDA + Nutritionix...';
+  loader.textContent = '⏳ Searching brand products + USDA database...';
   el.appendChild(loader);
+}
+
+function cleanUsdaName(raw, brand) {
+  // USDA names like "YOGURT, GREEK, NONFAT, VANILLA, CHOBANI" → "Chobani Greek Yogurt, Nonfat Vanilla"
+  // Move brand to front if it appears at the end
+  let name = raw.replace(/,\s+/g, ', ');
+  // Title-case
+  name = name.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  // If brand is in the name at the end, move it to front
+  if (brand) {
+    const bLower = brand.toLowerCase();
+    const nLower = name.toLowerCase();
+    if (nLower.endsWith(', ' + bLower) || nLower.endsWith(' ' + bLower)) {
+      const trimmed = name.slice(0, name.toLowerCase().lastIndexOf(bLower)).replace(/,\s*$/, '').trim();
+      name = brand + ' ' + trimmed;
+    }
+  }
+  return name;
 }
 
 async function runFoodApiSearch(query) {
@@ -6645,10 +6723,9 @@ async function runFoodApiSearch(query) {
   if (!el) return;
 
   try {
-    // Run USDA first, then Nutritionix in parallel
     const [usdaResults, nixResults] = await Promise.all([
       searchUsda(query),
-      searchNutritionix(query)
+      searchNutritionix(query),
     ]);
 
     if (query !== fmSearchQuery) return; // stale
@@ -6673,27 +6750,29 @@ async function runFoodApiSearch(query) {
     const finalNix  = filteredNix.filter(f => !myIds.has(f.id));
 
     if (finalUsda.length) {
-      const hdr = appendSectionHdr(el, 'USDA Database', true);
-      finalUsda.forEach(f => {
-        fmApiCache[f.id] = f;
-        appendApiRow(el, f, false, true);
-      });
+      appendSectionHdr(el, 'USDA Database', true);
+      finalUsda.forEach(f => { fmApiCache[f.id] = f; appendApiRow(el, f, false, true); });
     }
 
     if (finalNix.length) {
-      const hdr = appendSectionHdr(el, 'Nutritionix (Restaurants & Brands)', true);
-      finalNix.forEach(f => {
-        fmApiCache[f.id] = f;
-        appendApiRow(el, f, false, true);
-      });
+      appendSectionHdr(el, 'Restaurants & Chains', true);
+      finalNix.forEach(f => { fmApiCache[f.id] = f; appendApiRow(el, f, false, true); });
     }
 
-    if (!finalUsda.length && !finalNix.length) {
+    const hasResults = finalUsda.length || finalNix.length;
+    if (!hasResults) {
       const msg = document.createElement('div');
       msg.className = 'fm-api-section';
-      msg.style.cssText = 'font-size:12px;color:var(--text3);padding:10px 0;text-align:center';
-      msg.textContent = 'No database results — try a different term or use Custom Entry.';
+      msg.style.cssText = 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center;line-height:1.7';
+      msg.innerHTML = 'No results found.<br><span style="font-size:11px">Try a shorter term or use the <b style="color:var(--gold)">📷 barcode button</b> for packaged foods.</span>';
       el.appendChild(msg);
+    } else if (finalUsda.length < 4) {
+      // Low results — nudge toward barcode
+      const tip = document.createElement('div');
+      tip.className = 'fm-api-section';
+      tip.style.cssText = 'font-size:10px;color:var(--text3);padding:6px 0 2px;font-family:monospace';
+      tip.textContent = '📷 For packaged foods, scanning the barcode gives more accurate results.';
+      el.appendChild(tip);
     }
 
   } catch(e) {
@@ -6713,8 +6792,13 @@ function appendSectionHdr(parent, text, isApiSection) {
 function appendApiRow(parent, food, isSaved, isApiSection) {
   const row = document.createElement('div');
   row.className = 'fm-result-item' + (isApiSection ? ' fm-api-section' : '');
-  const badgeCls = isSaved ? 'fm-source-saved' : (food.source === 'usda' ? 'fm-source-usda' : 'fm-source-nix');
-  const badgeTxt = isSaved ? '★ saved' : food.source;
+  const badgeCls = isSaved ? 'fm-source-saved'
+    : food.source === 'usda' ? 'fm-source-usda'
+    : food.source === 'off'  ? 'fm-source-off'
+    : 'fm-source-nix';
+  const badgeTxt = isSaved ? '★ saved'
+    : food.source === 'off' ? 'brands'
+    : food.source;
   row.innerHTML =
     '<div class="fm-result-name">'
     + food.n
@@ -9188,6 +9272,129 @@ function openSleepIQ() {
   }, 1500);
 }
 
+// ── BODY PHOTO PROGRESS ──────────────────────────────────────
+const PHOTO_DB_NAME = 'thor-photos';
+const PHOTO_DB_VER  = 1;
+let _photoDB = null;
+
+function photoOpenDB() {
+  if (_photoDB) return Promise.resolve(_photoDB);
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(PHOTO_DB_NAME, PHOTO_DB_VER);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('photos', { keyPath: 'id', autoIncrement: true });
+    req.onsuccess = e => { _photoDB = e.target.result; res(_photoDB); };
+    req.onerror   = () => rej(req.error);
+  });
+}
+
+function photoGetAll() {
+  return photoOpenDB().then(db => new Promise((res, rej) => {
+    const tx = db.transaction('photos', 'readonly');
+    const req = tx.objectStore('photos').getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror   = () => rej(req.error);
+  }));
+}
+
+function photoAdd(record) {
+  return photoOpenDB().then(db => new Promise((res, rej) => {
+    const tx  = db.transaction('photos', 'readwrite');
+    const req = tx.objectStore('photos').add(record);
+    req.onsuccess = () => res(req.result);
+    req.onerror   = () => rej(req.error);
+  }));
+}
+
+function photoDelete(id) {
+  return photoOpenDB().then(db => new Promise((res, rej) => {
+    const tx  = db.transaction('photos', 'readwrite');
+    const req = tx.objectStore('photos').delete(id);
+    req.onsuccess = () => res();
+    req.onerror   = () => rej(req.error);
+  }));
+}
+
+function photoSave(angle, input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const date = slToday();
+    await photoAdd({ date, angle, dataUrl: e.target.result });
+    showToast(`${angle.charAt(0).toUpperCase()+angle.slice(1)} photo saved ✓`, 'success');
+    photoRender();
+    photoUpdateHeader();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function photoDelete2(id) {
+  await photoDelete(id);
+  photoRender();
+  photoUpdateHeader();
+}
+
+async function photoUpdateHeader() {
+  const all = await photoGetAll();
+  const sub = document.getElementById('photos-header-sub');
+  if (!sub) return;
+  sub.textContent = all.length ? `${all.length} photo${all.length>1?'s':''} saved` : 'Tap to add or compare';
+}
+
+let _photoView = 'gallery';
+
+async function photoRender() {
+  const wrap = document.getElementById('photos-compare-wrap');
+  if (!wrap) return;
+  const all = await photoGetAll();
+
+  if (!all.length) {
+    wrap.innerHTML = `<div style="text-align:center;padding:16px 0;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">No photos yet — tap a button above to add your first</div>`;
+    return;
+  }
+
+  const tabBar = `<div class="photo-tab-bar">
+    <button class="photo-tab${_photoView==='gallery'?' active':''}" onclick="_photoView='gallery';photoRender()">Gallery</button>
+    <button class="photo-tab${_photoView==='compare'?' active':''}" onclick="_photoView='compare';photoRender()">Compare</button>
+  </div>`;
+
+  if (_photoView === 'gallery') {
+    const cards = [...all].reverse().map(p => `
+      <div class="photo-entry">
+        <img src="${p.dataUrl}" loading="lazy">
+        <div class="photo-entry-label">${p.angle.toUpperCase()} · ${p.date}</div>
+        <button class="photo-entry-del" onclick="photoDelete2(${p.id})">✕</button>
+      </div>`).join('');
+    wrap.innerHTML = tabBar + `<div class="photo-grid">${cards}</div>`;
+  } else {
+    // Compare: pick earliest vs latest per angle
+    const angles = ['front','side','back'];
+    const pairs = angles.map(angle => {
+      const byAngle = all.filter(p => p.angle === angle).sort((a,b) => a.date.localeCompare(b.date));
+      return { angle, first: byAngle[0], last: byAngle[byAngle.length-1] };
+    }).filter(p => p.first);
+
+    const rows = pairs.map(({ angle, first, last }) => `
+      <div style="margin-bottom:12px">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">${angle}</div>
+        <div class="photo-compare">
+          <div class="photo-compare-slot">
+            <img src="${first.dataUrl}" loading="lazy">
+            <div class="photo-compare-lbl">BEFORE · ${first.date}</div>
+          </div>
+          <div class="photo-compare-slot">
+            ${last !== first
+              ? `<img src="${last.dataUrl}" loading="lazy"><div class="photo-compare-lbl">NOW · ${last.date}</div>`
+              : `<div style="color:var(--text3);font-family:'DM Mono',monospace;font-size:10px;text-align:center;padding:12px">Add another<br>${angle} photo<br>to compare</div>`}
+          </div>
+        </div>
+      </div>`).join('');
+
+    wrap.innerHTML = tabBar + rows;
+  }
+}
+
 // ── WATER INTAKE ─────────────────────────────────────────────
 const WATER_KEY = 'thor-water';
 function waterLoad() { try { return JSON.parse(localStorage.getItem(WATER_KEY) || '{}'); } catch(e) { return {}; } }
@@ -9265,6 +9472,7 @@ function wellToggle(section) {
     el.classList.add('open');
     if (section === 'bw')       { renderBwChart(); }
     if (section === 'water')    { waterRender(); }
+    if (section === 'photos')   { photoRender(); }
     if (section === 'timer') wtRenderTimer();
     if (section === 'soreness') { renderSoreGrid(); updateSoreHeader(); applyWorkoutSoreBadges(); }
     if (section === 'macros')   { mcLoadSaved(); }
@@ -13921,6 +14129,7 @@ document.addEventListener('DOMContentLoaded', () => {
   checkDeload();          // Deload week detection
   bwUpdateHeader();       // Bodyweight log header
   waterUpdateHeader();    // Water intake header
+  photoUpdateHeader();    // Progress photos header
 });
 
 </script>
