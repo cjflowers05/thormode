@@ -574,6 +574,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .week-sum-highlight{grid-column:1/-1;background:rgba(201,168,76,.07);border-color:rgba(201,168,76,.3)}
 .week-sum-best{font-size:12px;color:var(--text2);margin-top:4px}
 
+/* ── CUSTOM WORKOUT BUILDER ── */
+.cw-chip{padding:9px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:13px;cursor:pointer;transition:all .15s;text-align:center;line-height:1.3}
+.cw-chip.active{border-color:var(--gold);background:rgba(201,168,76,.12);color:var(--gold)}
+.cw-ex-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.cw-ex-name{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--text);letter-spacing:.03em}
+.cw-ex-tag{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.cw-ex-cue{font-size:11px;color:var(--text3);margin-top:6px;line-height:1.45}
+.cw-ex-actions{display:flex;gap:8px;margin-top:10px}
+.cw-log-btn{flex:1;padding:9px;border-radius:9px;background:var(--gold);border:none;color:#111;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;cursor:pointer}
+.cw-swap-btn{padding:9px 14px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;transition:border-color .15s}
+.cw-swap-btn:hover{border-color:var(--border2)}
+.cw-cardio-card{background:rgba(91,200,118,.07);border:1px solid rgba(91,200,118,.2);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+
 /* ── VOICE INPUT ── */
 .mic-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--bg3);cursor:pointer;flex-shrink:0;transition:all .15s;padding:0}
 .mic-btn svg{width:15px;height:15px;fill:var(--text3);transition:fill .15s}
@@ -1275,6 +1288,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <!-- TODAY'S WORKOUT BANNER -->
   <div id="today-workout-banner"></div>
   <div id="deload-banner" style="display:none"></div>
+  <!-- Custom Workout Builder entry -->
+  <div id="custom-workout-entry" onclick="openCustomWorkout()" style="display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:6px;background:var(--bg2);border:1px solid var(--border);border-radius:13px;cursor:pointer;transition:border-color .15s" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'">
+    <div style="width:38px;height:38px;border-radius:10px;background:rgba(201,168,76,.1);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚡</div>
+    <div style="flex:1">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text);letter-spacing:.04em">Custom Session / Add-Ons</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px">Build from scratch or add exercises to today's plan</div>
+    </div>
+    <div style="color:var(--text3);font-size:16px">›</div>
+  </div>
+  <!-- Today's custom add-ons (rendered by cwRenderTodayAddon) -->
+  <div id="cw-today-addon" style="display:none;margin-bottom:10px"></div>
   <div class="phase-pills">
     <button class="phase-pill active" onclick="showPhase('ph1',this)">Phase 1 — Foundation</button>
     <button class="phase-pill" onclick="showPhase('ph2',this)">Phase 2 — Power Build</button>
@@ -2400,6 +2424,66 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="me-back-link" onclick="meBack()">← edit text</div>
       <div class="me-safe-pad"></div>
     </div>
+  </div>
+</div>
+
+<!-- ══ CUSTOM WORKOUT MODAL ══ -->
+<div class="log-modal-overlay" id="customWorkoutModal" onclick="if(event.target===this)closeCustomWorkout()">
+  <div class="log-modal-sheet" style="max-height:92vh;display:flex;flex-direction:column;padding:20px 18px 0">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text);letter-spacing:.04em" id="cw-title">Build Your Session</div>
+        <div style="font-size:11px;color:var(--text3)" id="cw-subtitle">Pick what you want to hit today</div>
+      </div>
+      <div onclick="closeCustomWorkout()" style="width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text3)">✕</div>
+    </div>
+
+    <!-- PICKER VIEW -->
+    <div id="cw-picker" style="flex:1;overflow-y:auto;padding-bottom:16px">
+
+      <!-- Saved routines (hidden when empty) -->
+      <div id="cw-saved-section" style="display:none;margin-bottom:18px">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Saved routines</div>
+        <div id="cw-saved-list"></div>
+      </div>
+
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Target muscles</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px" id="cw-muscle-chips">
+        <button class="cw-chip" data-group="chest"     onclick="cwToggleChip(this)">💪 Chest</button>
+        <button class="cw-chip" data-group="back"      onclick="cwToggleChip(this)">🏋️ Back</button>
+        <button class="cw-chip" data-group="legs"      onclick="cwToggleChip(this)">🦵 Legs</button>
+        <button class="cw-chip" data-group="shoulders" onclick="cwToggleChip(this)">⚡ Shoulders</button>
+        <button class="cw-chip" data-group="arms"      onclick="cwToggleChip(this)">💪 Arms</button>
+        <button class="cw-chip" data-group="core"      onclick="cwToggleChip(this)">🔥 Core</button>
+      </div>
+
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Add cardio</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px" id="cw-cardio-chips">
+        <button class="cw-chip cw-single active" data-cardio="0"  onclick="cwPickCardio(this)">None</button>
+        <button class="cw-chip cw-single"        data-cardio="10" onclick="cwPickCardio(this)">10 min</button>
+        <button class="cw-chip cw-single"        data-cardio="20" onclick="cwPickCardio(this)">20 min</button>
+        <button class="cw-chip cw-single"        data-cardio="30" onclick="cwPickCardio(this)">30 min</button>
+        <button class="cw-chip cw-single"        data-cardio="45" onclick="cwPickCardio(this)">45 min</button>
+      </div>
+
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Session length</div>
+      <div style="display:flex;gap:8px;margin-bottom:24px" id="cw-length-chips">
+        <button class="cw-chip cw-single" data-len="quick"    onclick="cwPickLength(this)">Quick<br><span style="font-size:9px;opacity:.7">~20 min · 2–3 ex</span></button>
+        <button class="cw-chip cw-single active" data-len="moderate" onclick="cwPickLength(this)">Moderate<br><span style="font-size:9px;opacity:.7">~45 min · 4–5 ex</span></button>
+        <button class="cw-chip cw-single" data-len="full"     onclick="cwPickLength(this)">Full<br><span style="font-size:9px;opacity:.7">~60 min · 6–8 ex</span></button>
+      </div>
+
+      <button onclick="cwBuild()" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);border:none;color:#111;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.06em;cursor:pointer">BUILD SESSION</button>
+    </div>
+
+    <!-- GENERATED WORKOUT VIEW -->
+    <div id="cw-session" style="display:none;flex:1;overflow-y:auto;padding-bottom:calc(16px + var(--safe))">
+      <div id="cw-session-list"></div>
+    </div>
+
+    <div style="height:calc(var(--safe) + 6px);flex-shrink:0"></div>
   </div>
 </div>
 
@@ -3746,20 +3830,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="sl-today-sets" id="sl-today-sets"></div>
       <div class="sl-section-lbl" style="display:flex;align-items:center;justify-content:space-between">Log a Set <button class="mic-btn mic-btn-inline" onclick="startVoice('sets',this)" title="Say '225 for 5' or '135 pounds 8 reps'"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1a4 4 0 0 1 4 4v5a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1 16.93V20H8v2h8v-2h-3v-2.07A8 8 0 0 0 20 10h-2a6 6 0 0 1-12 0H4a8 8 0 0 0 7 7.93z"/></svg></button></div>
       <div class="sl-inputs">
-        <div class="sl-input-group">
-          <div class="sl-input-lbl">WEIGHT (LB)</div>
+        <div class="sl-input-group" id="sl-weight-group">
+          <div class="sl-input-lbl" id="sl-weight-lbl">WEIGHT (LB)</div>
           <div class="sl-stepper">
             <button class="sl-step-btn" onclick="slStep('w',-5)">−</button>
             <input class="sl-val-input" id="sl-weight" type="number" value="135" min="0" step="5" inputmode="decimal" oninput="renderWarmup()">
             <button class="sl-step-btn" onclick="slStep('w',5)">+</button>
           </div>
         </div>
-        <div class="sl-input-group">
-          <div class="sl-input-lbl">REPS</div>
+        <div class="sl-input-group" id="sl-reps-group">
+          <div class="sl-input-lbl" id="sl-reps-lbl">REPS</div>
           <div class="sl-stepper">
-            <button class="sl-step-btn" onclick="slStep('r',-1)">−</button>
+            <button class="sl-step-btn" id="sl-reps-minus" onclick="slStep('r',-1)">−</button>
             <input class="sl-val-input" id="sl-reps" type="number" value="5" min="1" step="1" inputmode="numeric">
-            <button class="sl-step-btn" onclick="slStep('r',1)">+</button>
+            <button class="sl-step-btn" id="sl-reps-plus" onclick="slStep('r',1)">+</button>
           </div>
         </div>
       </div>
@@ -4868,8 +4952,11 @@ function deleteLog(id) {
 function initLogBtns() {
   document.querySelectorAll('.exercise-row').forEach(row => {
     if (row.querySelector('.log-plus-btn')) return;
-    const exName = row.querySelector('.ex-name')?.textContent?.trim() || 'Exercise';
-    const setsText = row.querySelector('.ex-sets')?.textContent?.trim() || '';
+    const watchBtn = row.querySelector('[onclick*="openEx("]');
+    if (!watchBtn) return;
+    const m = watchBtn.getAttribute('onclick').match(/openEx\('([^']+)'\)/);
+    if (!m) return;
+    const key = m[1];
     const actions = row.querySelector('.ex-actions');
     if (!actions) return;
     const btn = document.createElement('div');
@@ -4877,7 +4964,7 @@ function initLogBtns() {
     btn.style.cssText = 'width:26px;height:26px;border-radius:7px;background:rgba(91,200,118,.08);border:1px solid rgba(91,200,118,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:16px;color:#5BC876;font-weight:400;line-height:1;user-select:none';
     btn.textContent = '+';
     btn.title = 'Log sets';
-    btn.onclick = (e) => { e.stopPropagation(); openLogModal(exName, setsText); };
+    btn.onclick = (e) => { e.stopPropagation(); openLogSheet(key); };
     actions.appendChild(btn);
   });
 }
@@ -12720,6 +12807,81 @@ const SL_COMPOUND = new Set(['deadlift','bench','squat','ohp','row','rdl','clean
 
 let slCurrentKey = null;
 
+// ── Exercise type classification ──────────────────────────────
+const SL_TIMED = new Set([
+  'plank','hipflexor','thoracic','worldsgreatest','deadhang','bearcrawl','farmerwalk','farmercarry'
+]);
+const SL_BODYWEIGHT = new Set([
+  'pushup','pullup','dips','airsquat','burpee','boxjump','jumpsquat',
+  'hangingraise','situp','rollout','stepup','manmaker','renegade','superman'
+]);
+const SL_DISTANCE = new Set(['500m']);
+
+function slExType(key) {
+  if (SL_TIMED.has(key))      return 'timed';
+  if (SL_DISTANCE.has(key))   return 'distance';
+  if (SL_BODYWEIGHT.has(key)) return 'bodyweight';
+  return 'weighted';
+}
+
+function slFormatSet(s, key) {
+  const type = slExType(key);
+  if (type === 'timed') {
+    const sec = s.r || 0;
+    return sec >= 60 ? `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}` : `${sec}s`;
+  }
+  if (type === 'distance') return `${s.r}m`;
+  if (type === 'bodyweight') return s.w > 0 ? `+${s.w}lb × ${s.r}` : `BW × ${s.r}`;
+  return `${s.w} × ${s.r}`;
+}
+
+// Adapt log sheet inputs to exercise type
+function slAdaptInputs(key) {
+  const type = slExType(key);
+  const wGrp  = document.getElementById('sl-weight-group');
+  const wLbl  = document.getElementById('sl-weight-lbl');
+  const rLbl  = document.getElementById('sl-reps-lbl');
+  const rMinus = document.getElementById('sl-reps-minus');
+  const rPlus  = document.getElementById('sl-reps-plus');
+  const wInput = document.getElementById('sl-weight');
+  const rInput = document.getElementById('sl-reps');
+  const warmup = document.getElementById('sl-warmup-wrap');
+
+  if (type === 'timed') {
+    wGrp.style.display  = 'none';
+    if (warmup) warmup.style.display = 'none';
+    rLbl.textContent    = 'DURATION (SEC)';
+    rInput.step         = '5';
+    rMinus.onclick      = () => slStep('r', -5);
+    rPlus.onclick       = () => slStep('r',  5);
+  } else if (type === 'distance') {
+    wGrp.style.display  = 'none';
+    if (warmup) warmup.style.display = 'none';
+    rLbl.textContent    = 'DISTANCE (M)';
+    rInput.step         = '100';
+    rMinus.onclick      = () => slStep('r', -100);
+    rPlus.onclick       = () => slStep('r',  100);
+  } else if (type === 'bodyweight') {
+    wGrp.style.display  = '';
+    if (warmup) warmup.style.display = 'none';
+    wLbl.textContent    = 'ADDED LB (0 = BW)';
+    wInput.step         = '5';
+    rLbl.textContent    = 'REPS';
+    rInput.step         = '1';
+    rMinus.onclick      = () => slStep('r', -1);
+    rPlus.onclick       = () => slStep('r',  1);
+  } else {
+    wGrp.style.display  = '';
+    if (warmup) warmup.style.display = '';
+    wLbl.textContent    = 'WEIGHT (LB)';
+    wInput.step         = '5';
+    rLbl.textContent    = 'REPS';
+    rInput.step         = '1';
+    rMinus.onclick      = () => slStep('r', -1);
+    rPlus.onclick       = () => slStep('r',  1);
+  }
+}
+
 // ── Storage ───────────────────────────────────────────────────
 function slLoad()    { try { return JSON.parse(localStorage.getItem(SL_KEY)||'{}');     } catch(e) { return {}; } }
 function slSave(d)   { localStorage.setItem(SL_KEY, JSON.stringify(d)); }
@@ -12857,14 +13019,20 @@ function openLogSheet(key) {
   document.getElementById('sl-ex-name').textContent = ex.name || key;
   document.getElementById('sl-ex-sub').textContent  = ex.tag  ? (ex.tag + (ex.sets ? ' · ' + ex.sets : '')) : '';
 
-  // Pre-fill inputs
+  // Pre-fill inputs based on exercise type
   const today  = slTodaySets(key);
   const last   = slLastSession(key);
-  let prefW = 135, prefR = 5;
-  if (today.length)           { prefW = today[today.length-1].w; prefR = today[today.length-1].r; }
-  else if (last?.sets?.length){ prefW = last.sets[0].w;          prefR = last.sets[0].r; }
+  const exType = slExType(key);
+  let prefW, prefR;
+  if (exType === 'timed')      { prefW = 0;   prefR = 30; }
+  else if (exType === 'distance') { prefW = 0; prefR = 500; }
+  else if (exType === 'bodyweight') { prefW = 0; prefR = 10; }
+  else                         { prefW = 135; prefR = 5; }
+  if (today.length)            { prefW = today[today.length-1].w; prefR = today[today.length-1].r; }
+  else if (last?.sets?.length) { prefW = last.sets[0].w;          prefR = last.sets[0].r; }
   document.getElementById('sl-weight').value = prefW;
   document.getElementById('sl-reps').value   = prefR;
+  slAdaptInputs(key);
 
   // Smart overload nudge (shown when no sets logged yet today)
   const nudgeEl = document.getElementById('sl-overload-nudge');
@@ -12909,9 +13077,11 @@ function slStep(field, delta) {
 // ── Log a set ─────────────────────────────────────────────────
 function slLogSet() {
   if (!slCurrentKey) return;
-  const w = parseFloat(document.getElementById('sl-weight').value);
+  const exType = slExType(slCurrentKey);
+  const w = parseFloat(document.getElementById('sl-weight').value) || 0;
   const r = parseInt(document.getElementById('sl-reps').value);
-  if (!w || !r || r < 1) { showToast('Enter a valid weight and rep count', 'error'); return; }
+  if (r < 1 || isNaN(r)) { showToast('Enter a valid value', 'error'); return; }
+  if (exType === 'weighted' && !w) { showToast('Enter a weight', 'error'); return; }
 
   const d     = slLoad();
   const today = slToday();
@@ -12978,13 +13148,15 @@ function slRenderSheet() {
   const pr        = prs[key];
   const today     = slToday();
 
+  const exType = slExType(key);
+
   // Last session
   const prevEl = document.getElementById('sl-prev-sets');
   if (last?.sets?.length) {
     const lbl = new Date(last.date + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
     prevEl.innerHTML =
       '<div class="sl-prev-date">' + lbl + '</div>' +
-      last.sets.map(s => '<div class="sl-prev-chip">' + s.w + ' lb × ' + s.r + '</div>').join('');
+      last.sets.map(s => '<div class="sl-prev-chip">' + slFormatSet(s, key) + '</div>').join('');
   } else {
     prevEl.innerHTML = '<div class="sl-empty-note">No previous sessions yet</div>';
   }
@@ -12995,9 +13167,14 @@ function slRenderSheet() {
     todayEl.innerHTML = todaySets.map((s, i) => {
       const e1rm = slEpley(s.w, s.r);
       const isPR = pr && e1rm >= pr.e1rm && pr.date === today && i === todaySets.length - 1;
+      const label = exType === 'timed'
+        ? slFormatSet(s, key) + ' hold'
+        : exType === 'distance'
+          ? slFormatSet(s, key)
+          : slFormatSet(s, key);
       return '<div class="sl-today-row">' +
         '<div class="sl-today-num">' + (i+1) + '</div>' +
-        '<div class="sl-today-val">' + s.w + ' lb × ' + s.r + ' reps' +
+        '<div class="sl-today-val">' + label +
           (isPR ? ' <span class="sl-pr-tag">🏆 PR</span>' : '') +
         '</div>' +
         '<button class="sl-del-btn" onclick="slDeleteSet(\'' + key + '\',' + i + ')">✕</button>' +
@@ -13013,7 +13190,8 @@ function slRenderSheet() {
 
   // Update LOG SET button label
   const btn = document.getElementById('sl-log-btn');
-  if (btn) btn.textContent = 'LOG SET ' + (todaySets.length ? '#' + (todaySets.length+1) : '#1');
+  const setLabel = exType === 'timed' ? 'LOG HOLD' : exType === 'distance' ? 'LOG EFFORT' : 'LOG SET';
+  if (btn) btn.textContent = setLabel + ' ' + (todaySets.length ? '#' + (todaySets.length+1) : '#1');
 }
 
 // ── Refresh the exercise row sub-label ────────────────────────
@@ -13698,8 +13876,8 @@ function openSessionReplay(date) {
       if (isPR) prCount++;
       return `<div class="sr-set-row">
         <span class="sr-set-label">Set ${i + 1}</span>
-        <span class="sr-set-weight${isPR ? ' sr-set-pr' : ''}">${s.w} lb × ${s.r} reps${isPR ? ' ★' : ''}</span>
-        <span class="sr-set-e1rm">e1RM ${e1rm} lb</span>
+        <span class="sr-set-weight${isPR ? ' sr-set-pr' : ''}">${slFormatSet(s, key)}${isPR ? ' ★' : ''}</span>
+        ${slExType(key) === 'weighted' ? `<span class="sr-set-e1rm">e1RM ${e1rm} lb</span>` : ''}
       </div>`;
     }).join('');
 
@@ -13826,7 +14004,7 @@ function renderFocusModeExercises() {
     const chips = sets.map(s => {
       const e1rm = slEpley(s.w, s.r);
       const isPR = prs[key] && Math.abs(e1rm - prs[key].e1rm) < 1;
-      return `<span class="fm-ex-chip">${s.w}×${s.r}${isPR ? '★' : ''}</span>`;
+      return `<span class="fm-ex-chip">${slFormatSet(s, key)}${isPR ? '★' : ''}</span>`;
     }).join('');
 
     const logLabel = done ? `+${sets.length}` : '+ LOG';
@@ -14066,7 +14244,7 @@ function buildSessionCard(phaseId, dow) {
     const chips = sets.map(s => {
       const e1rm = slEpley(s.w, s.r);
       const isPR = prs[key] && Math.abs(e1rm - prs[key].e1rm) < 1;
-      return `<span class="session-ex-chip${isPR ? ' pr' : ''}">${s.w}×${s.r}${isPR ? '★' : ''}</span>`;
+      return `<span class="session-ex-chip${isPR ? ' pr' : ''}">${slFormatSet(s, key)}${isPR ? '★' : ''}</span>`;
     }).join('');
 
     const suggestion = !hasSets ? slSuggestion(key) : null;
@@ -14722,6 +14900,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bwUpdateHeader();       // Bodyweight log header
   waterUpdateHeader();    // Water intake header
   photoUpdateHeader();    // Progress photos header
+  cwRenderTodayAddon();   // Custom workout add-ons for today
 });
 
 </script>
@@ -14996,6 +15175,324 @@ function rbSpeak(text) {
   utt.pitch = 1;
   utt.lang  = 'en-US';
   window.speechSynthesis.speak(utt);
+}
+
+// ══════════════════════════════════════════════════
+// CUSTOM WORKOUT BUILDER
+// ══════════════════════════════════════════════════
+
+// Maps muscle group names → exercise keys from EX
+// SORE_EX_MAP values are arrays; use first group as primary
+function cwGetMuscleMap() {
+  const map = { chest: [], back: [], legs: [], shoulders: [], arms: [], core: [] };
+  Object.entries(SORE_EX_MAP || {}).forEach(([key, muscles]) => {
+    if (!EX[key]) return;
+    const primary = muscles[0];
+    if (primary && map[primary]) map[primary].push(key);
+  });
+  return map;
+}
+
+// Storage keys
+const CW_ROUTINES_KEY = 'thor-cw-routines';
+const CW_TODAY_KEY    = 'thor-cw-today';
+
+function cwRoutinesLoad() { try { return JSON.parse(localStorage.getItem(CW_ROUTINES_KEY) || '[]'); } catch(e) { return []; } }
+function cwRoutinesSave(d) { localStorage.setItem(CW_ROUTINES_KEY, JSON.stringify(d)); }
+function cwTodayLoad()    { try { return JSON.parse(localStorage.getItem(CW_TODAY_KEY) || 'null'); } catch(e) { return null; } }
+function cwTodaySave(d)   { localStorage.setItem(CW_TODAY_KEY, JSON.stringify(d)); }
+
+// State
+let _cwCardio   = 0;      // selected cardio minutes
+let _cwLength   = 'moderate';
+let _cwSession  = [];     // [{key, altPool, altIdx}]
+let _cwGroups   = [];     // selected muscle groups (for saving)
+
+function openCustomWorkout() {
+  document.getElementById('customWorkoutModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  cwBackToPicker();
+  document.querySelectorAll('#cw-muscle-chips .cw-chip').forEach(c => c.classList.remove('active'));
+  _cwCardio  = 0;
+  _cwLength  = 'moderate';
+  document.querySelectorAll('#cw-cardio-chips .cw-chip').forEach(c => c.classList.toggle('active', c.dataset.cardio === '0'));
+  document.querySelectorAll('#cw-length-chips .cw-chip').forEach(c => c.classList.toggle('active', c.dataset.len === 'moderate'));
+  cwRenderSavedRoutines();
+}
+
+function closeCustomWorkout() {
+  document.getElementById('customWorkoutModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function cwToggleChip(el) {
+  el.classList.toggle('active');
+}
+
+function cwPickCardio(el) {
+  document.querySelectorAll('#cw-cardio-chips .cw-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  _cwCardio = parseInt(el.dataset.cardio, 10);
+}
+
+function cwPickLength(el) {
+  document.querySelectorAll('#cw-length-chips .cw-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  _cwLength = el.dataset.len;
+}
+
+function cwExCountForLength() {
+  return { quick: 3, moderate: 5, full: 7 }[_cwLength] || 5;
+}
+
+function cwShuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function cwBackToPicker() {
+  document.getElementById('cw-picker').style.display  = '';
+  document.getElementById('cw-session').style.display = 'none';
+  document.getElementById('cw-title').textContent    = 'Build Your Session';
+  document.getElementById('cw-subtitle').textContent = 'Pick what you want to hit today';
+}
+
+function cwBuild() {
+  const selectedGroups = [...document.querySelectorAll('#cw-muscle-chips .cw-chip.active')]
+    .map(c => c.dataset.group);
+  _cwGroups = selectedGroups;
+
+  const muscleMap = cwGetMuscleMap();
+  const exCount   = cwExCountForLength();
+  _cwSession = [];
+
+  if (selectedGroups.length === 0 && _cwCardio === 0) {
+    alert('Pick at least one muscle group or cardio option.');
+    return;
+  }
+
+  if (selectedGroups.length > 0) {
+    // Distribute exercise slots across selected groups
+    const slotsPerGroup = Math.max(1, Math.round(exCount / selectedGroups.length));
+    selectedGroups.forEach(group => {
+      const pool = cwShuffle(muscleMap[group] || []);
+      pool.slice(0, slotsPerGroup).forEach(key => {
+        if (_cwSession.length < exCount) {
+          const altPool = pool.filter(k => k !== key);
+          _cwSession.push({ key, altPool, altIdx: 0 });
+        }
+      });
+    });
+
+    // If we're short (small muscle pools), fill from other groups
+    if (_cwSession.length < exCount) {
+      const usedKeys = new Set(_cwSession.map(e => e.key));
+      for (const group of selectedGroups) {
+        for (const key of cwShuffle(muscleMap[group] || [])) {
+          if (_cwSession.length >= exCount) break;
+          if (!usedKeys.has(key)) {
+            _cwSession.push({ key, altPool: (muscleMap[group] || []).filter(k => k !== key), altIdx: 0 });
+            usedKeys.add(key);
+          }
+        }
+        if (_cwSession.length >= exCount) break;
+      }
+    }
+  }
+
+  cwRenderSession();
+}
+
+function cwSwapExercise(idx) {
+  const item = _cwSession[idx];
+  if (!item || !item.altPool.length) return;
+  item.altIdx = (item.altIdx + 1) % item.altPool.length;
+  item.key    = item.altPool[item.altIdx];
+  cwRenderSession();
+}
+
+function cwRenderSession() {
+  document.getElementById('cw-picker').style.display  = 'none';
+  document.getElementById('cw-session').style.display = '';
+  document.getElementById('cw-title').textContent    = 'Your Session';
+
+  const groups = [...document.querySelectorAll('#cw-muscle-chips .cw-chip.active')]
+    .map(c => c.dataset.group);
+  const groupLabel = groups.length
+    ? groups.map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(' + ')
+    : 'Cardio Only';
+  const lenLabel = { quick: 'Quick (~20 min)', moderate: 'Moderate (~45 min)', full: 'Full (~60 min)' }[_cwLength];
+  document.getElementById('cw-subtitle').textContent = `${groupLabel} · ${lenLabel}`;
+
+  const list = document.getElementById('cw-session-list');
+  let html = '';
+
+  _cwSession.forEach((item, idx) => {
+    const ex = EX[item.key];
+    if (!ex) return;
+    const muscle = (SORE_EX_MAP[item.key] || [])[0] || '';
+    const hasAlts = item.altPool.length > 0;
+    html += `<div class="cw-ex-card">
+      <div class="cw-ex-name">${ex.name}</div>
+      <div class="cw-ex-tag">${muscle.toUpperCase()}${ex.tag ? ' · ' + ex.tag.toUpperCase() : ''}</div>
+      ${ex.cues && ex.cues[0] ? `<div class="cw-ex-cue">${ex.cues[0]}</div>` : ''}
+      <div class="cw-ex-actions">
+        <button class="cw-log-btn" onclick="closeCustomWorkout();openLogSheet('${item.key}')">LOG SET</button>
+        ${hasAlts ? `<button class="cw-swap-btn" onclick="cwSwapExercise(${idx})">↻ Swap</button>` : ''}
+      </div>
+    </div>`;
+  });
+
+  if (_cwCardio > 0) {
+    html += `<div class="cw-cardio-card">
+      <div style="font-size:22px">🏃</div>
+      <div style="flex:1">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;color:#5BC876;letter-spacing:.03em">${_cwCardio}-MINUTE CARDIO</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">Treadmill, bike, row, stairs — your pick</div>
+      </div>
+    </div>`;
+  }
+
+  if (!_cwSession.length && !_cwCardio) {
+    html = '<div class="chart-empty" style="padding:20px 0">No exercises found for those muscle groups. Try adding more groups.</div>';
+  }
+
+  html += `<div style="display:flex;gap:8px;margin-top:4px">
+    <button onclick="cwAddToToday()" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(91,200,118,.35);background:rgba(91,200,118,.08);color:#5BC876;font-size:12px;cursor:pointer;font-family:'DM Mono',monospace">+ Add to Today</button>
+    <button onclick="cwPromptSaveRoutine()" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:'DM Mono',monospace">💾 Save Routine</button>
+  </div>
+  <button onclick="cwBackToPicker()" style="width:100%;margin-top:8px;padding:11px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:12px;cursor:pointer">← Rebuild</button>`;
+
+  list.innerHTML = html;
+}
+
+// ── Add to Today ──────────────────────────────────
+function cwAddToToday() {
+  const today = slToday();
+  const existing = cwTodayLoad();
+  const existingKeys = (existing && existing.date === today) ? existing.exercises : [];
+  const newKeys = _cwSession.map(e => e.key).filter(k => !existingKeys.includes(k));
+  cwTodaySave({
+    date: today,
+    exercises: [...existingKeys, ...newKeys],
+    cardio: _cwCardio
+  });
+  closeCustomWorkout();
+  cwRenderTodayAddon();
+  // Scroll to addon section
+  setTimeout(() => {
+    const el = document.getElementById('cw-today-addon');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 150);
+}
+
+function cwRenderTodayAddon() {
+  const el = document.getElementById('cw-today-addon');
+  if (!el) return;
+  const today = slToday();
+  const data  = cwTodayLoad();
+  if (!data || data.date !== today || (!data.exercises.length && !data.cardio)) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = '';
+  let html = `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+    <span>Today's Add-Ons</span>
+    <span onclick="cwClearToday()" style="cursor:pointer;color:var(--text3);font-size:11px">✕ Clear</span>
+  </div>`;
+  data.exercises.forEach(key => {
+    const ex = EX[key];
+    if (!ex) return;
+    html += `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--text);letter-spacing:.03em">${ex.name}</div>
+        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">${((SORE_EX_MAP[key]||[])[0]||'').toUpperCase()}</div>
+      </div>
+      <button onclick="openLogSheet('${key}')" style="padding:7px 14px;border-radius:8px;background:var(--gold);border:none;color:#111;font-family:'Bebas Neue',sans-serif;font-size:14px;cursor:pointer">LOG</button>
+    </div>`;
+  });
+  if (data.cardio) {
+    html += `<div style="background:rgba(91,200,118,.07);border:1px solid rgba(91,200,118,.2);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:18px">🏃</div>
+      <div style="flex:1;font-family:'Bebas Neue',sans-serif;font-size:15px;color:#5BC876;letter-spacing:.03em">${data.cardio}-MIN CARDIO</div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function cwClearToday() {
+  localStorage.removeItem(CW_TODAY_KEY);
+  cwRenderTodayAddon();
+}
+
+// ── Saved Routines ────────────────────────────────
+function cwPromptSaveRoutine() {
+  if (!_cwSession.length && !_cwCardio) return;
+  const name = prompt('Name this routine:');
+  if (!name || !name.trim()) return;
+  const routines = cwRoutinesLoad();
+  routines.push({
+    id:        Date.now(),
+    name:      name.trim(),
+    groups:    _cwGroups,
+    cardio:    _cwCardio,
+    length:    _cwLength,
+    exercises: _cwSession.map(e => e.key)
+  });
+  cwRoutinesSave(routines);
+  cwRenderSavedRoutines();
+  cwBackToPicker();
+}
+
+function cwLoadRoutine(id) {
+  const routines = cwRoutinesLoad();
+  const r = routines.find(x => x.id === id);
+  if (!r) return;
+  // Restore state
+  _cwGroups  = r.groups  || [];
+  _cwCardio  = r.cardio  || 0;
+  _cwLength  = r.length  || 'moderate';
+  _cwSession = (r.exercises || []).map(key => {
+    const muscle = (SORE_EX_MAP[key] || [])[0] || '';
+    const muscleMap = cwGetMuscleMap();
+    const pool = (muscleMap[muscle] || []).filter(k => k !== key);
+    return { key, altPool: pool, altIdx: 0 };
+  });
+  cwRenderSession();
+}
+
+function cwDeleteRoutine(id, event) {
+  event.stopPropagation();
+  const routines = cwRoutinesLoad().filter(r => r.id !== id);
+  cwRoutinesSave(routines);
+  cwRenderSavedRoutines();
+}
+
+function cwRenderSavedRoutines() {
+  const section = document.getElementById('cw-saved-section');
+  const list    = document.getElementById('cw-saved-list');
+  if (!section || !list) return;
+  const routines = cwRoutinesLoad();
+  if (!routines.length) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  list.innerHTML = routines.map(r => {
+    const groupLabel = r.groups && r.groups.length
+      ? r.groups.map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(', ')
+      : 'Custom';
+    const cardioLabel = r.cardio ? ` + ${r.cardio}min cardio` : '';
+    return `<div onclick="cwLoadRoutine(${r.id})" style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:7px;cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--text);letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div>
+        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">${groupLabel}${cardioLabel} · ${r.exercises ? r.exercises.length : 0} exercises</div>
+      </div>
+      <div onclick="cwDeleteRoutine(${r.id},event)" style="color:var(--text3);font-size:14px;padding:4px 6px;cursor:pointer">✕</div>
+      <div style="color:var(--gold);font-size:14px">›</div>
+    </div>`;
+  }).join('');
 }
 </script>
 
