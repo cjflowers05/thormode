@@ -1112,6 +1112,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .rt-subhead{font-size:12px;color:var(--text3);margin-bottom:18px}
 .rt-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .rt-preset{padding:13px 6px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:22px;cursor:pointer;transition:all .15s;text-align:center}
+.rt-preset.rt-last{background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.3);color:var(--gold)}
 .rt-preset:active{background:var(--bg4);border-color:var(--border2)}
 .rt-preset-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.05em;display:block;margin-top:1px;text-transform:uppercase}
 .rt-custom-row{display:flex;gap:8px;margin-bottom:4px}
@@ -3865,7 +3866,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- Preset picker (idle) -->
     <div id="rt-picker-view">
       <div class="rt-heading">Rest Timer</div>
-      <div class="rt-subhead">Choose a duration — or enter your own</div>
+      <!-- Last-rest button (hidden until a rest has been completed) -->
+      <div id="rt-last-row" style="display:none;margin-bottom:10px">
+        <button id="rt-last-btn" class="rt-preset rt-last" onclick="rtStartLast()" style="width:100%;font-size:14px;padding:12px 0">
+          ↩ Last rest: <span id="rt-last-label">—</span>
+        </button>
+      </div>
+      <div class="rt-subhead">Presets</div>
       <div class="rt-presets">
         <button class="rt-preset" onclick="rtStart(45)">0:45<span class="rt-preset-sub">sec</span></button>
         <button class="rt-preset" onclick="rtStart(60)">1:00<span class="rt-preset-sub">min</span></button>
@@ -3899,7 +3906,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <!-- Done state -->
     <div id="rt-done-view" style="display:none">
       <div class="rt-done-banner">✓ Rest Complete — Go!</div>
-      <div style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:16px">Start next set, then queue another rest:</div>
+      <div style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:12px">Log your set, then start the next rest:</div>
+      <button id="rt-done-last-btn" onclick="rtStartLast()" style="display:none;width:100%;padding:13px;border-radius:12px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.35);color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.05em;cursor:pointer;margin-bottom:10px">↩ Same rest again — <span id="rt-done-last-label">—</span></button>
       <div class="rt-presets">
         <button class="rt-preset" onclick="rtStart(45)">0:45<span class="rt-preset-sub">sec</span></button>
         <button class="rt-preset" onclick="rtStart(60)">1:00<span class="rt-preset-sub">min</span></button>
@@ -13071,6 +13079,9 @@ function closeLogSheet() {
   document.getElementById('slModal').classList.remove('open');
   unlockBodyScroll();
   slCurrentKey = null;
+  // Always sync session tracker on close so checkmarks appear without app reload
+  if (typeof refreshSessionTracker === 'function') refreshSessionTracker();
+  if (typeof cwRenderTodayAddon    === 'function') cwRenderTodayAddon();
 }
 
 // ── Stepper buttons ───────────────────────────────────────────
@@ -14670,6 +14681,48 @@ let rtSeconds  = 0;
 let rtTotal    = 0;
 let rtInterval = null;
 const RT_CIRC  = 427; // 2π × 68
+const RT_LAST_KEY = 'thor-last-rest';
+
+// Shared AudioContext — created once on first user gesture, reused for all beeps
+let _rtAudioCtx = null;
+function rtGetAudioCtx() {
+  if (!_rtAudioCtx) {
+    try { _rtAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  } else if (_rtAudioCtx.state === 'suspended') {
+    try { _rtAudioCtx.resume(); } catch(e) {}
+  }
+  return _rtAudioCtx;
+}
+
+function rtLastSecs() {
+  return parseInt(localStorage.getItem(RT_LAST_KEY) || '0', 10) || 0;
+}
+
+function rtFmtSecs(s) {
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+
+function rtUpdateLastBtns(secs) {
+  // Picker view
+  const row  = document.getElementById('rt-last-row');
+  const lbl  = document.getElementById('rt-last-label');
+  if (row && lbl) {
+    if (secs > 0) { lbl.textContent = rtFmtSecs(secs); row.style.display = ''; }
+    else           { row.style.display = 'none'; }
+  }
+  // Done view
+  const dBtn = document.getElementById('rt-done-last-btn');
+  const dLbl = document.getElementById('rt-done-last-label');
+  if (dBtn && dLbl) {
+    if (secs > 0) { dLbl.textContent = rtFmtSecs(secs); dBtn.style.display = ''; }
+    else           { dBtn.style.display = 'none'; }
+  }
+}
+
+function rtStartLast() {
+  const s = rtLastSecs();
+  if (s > 0) rtStart(s);
+}
 
 function rtFabTap() {
   const overlay = document.getElementById('rt-overlay');
@@ -14679,6 +14732,7 @@ function rtFabTap() {
     document.getElementById('rt-done-view').style.display   = 'none';
     rtUpdateDisplay();
   } else {
+    rtUpdateLastBtns(rtLastSecs());
     document.getElementById('rt-picker-view').style.display = 'block';
     document.getElementById('rt-active-view').style.display = 'none';
     document.getElementById('rt-done-view').style.display   = 'none';
@@ -14694,6 +14748,11 @@ function rtStart(seconds) {
   if (rtInterval) clearInterval(rtInterval);
   rtTotal = rtSeconds = seconds;
   rtRunning = true;
+  // Save as last-used duration and update buttons
+  localStorage.setItem(RT_LAST_KEY, String(seconds));
+  rtUpdateLastBtns(seconds);
+  // Warm up AudioContext while we have a user gesture
+  rtGetAudioCtx();
   document.getElementById('rt-picker-view').style.display = 'none';
   document.getElementById('rt-done-view').style.display   = 'none';
   document.getElementById('rt-active-view').style.display = 'block';
@@ -14702,7 +14761,6 @@ function rtStart(seconds) {
   document.getElementById('rt-fab').classList.add('running');
   rtUpdateDisplay();
   rtInterval = setInterval(rtTick, 1000);
-  // Request notification permission on first use
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
@@ -14762,18 +14820,24 @@ function rtDone() {
       });
     } catch(e) {}
   }
-  // Audio triple-beep
+  // Show "same rest again" button on done view
+  rtUpdateLastBtns(rtLastSecs());
+  // Audio bell — ascending 3-tone chime using the pre-warmed AudioContext
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 0.18, 0.36].forEach(t => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.frequency.value = 880; o.type = 'sine';
-      g.gain.setValueAtTime(0.35, ctx.currentTime + t);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.18);
-      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.22);
-    });
-    setTimeout(() => ctx.close(), 2000);
+    const ctx = rtGetAudioCtx();
+    if (ctx) {
+      const now = ctx.currentTime;
+      [[0, 660], [0.2, 880], [0.4, 1100]].forEach(([t, freq]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(freq, now + t);
+        g.gain.setValueAtTime(0, now + t);
+        g.gain.linearRampToValueAtTime(0.5, now + t + 0.04);
+        g.gain.exponentialRampToValueAtTime(0.001, now + t + 0.6);
+        o.start(now + t); o.stop(now + t + 0.65);
+      });
+    }
   } catch(e) {}
 }
 
