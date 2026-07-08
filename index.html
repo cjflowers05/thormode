@@ -13123,6 +13123,7 @@ function slLogSet() {
   if (typeof renderBurnRing === 'function') renderBurnRing();
   if (typeof refreshSessionTracker === 'function') refreshSessionTracker();
   if (typeof refreshFocusMode === 'function') refreshFocusMode();
+  if (typeof cwRenderTodayAddon === 'function') cwRenderTodayAddon();
 }
 
 // ── Delete a set ──────────────────────────────────────────────
@@ -13135,7 +13136,8 @@ function slDeleteSet(key, idx) {
     slSave(d);
     slRenderSheet();
     slRefreshRow(key);
-    wdRefreshDayBadges(); // Feature 10: update completion badges
+    wdRefreshDayBadges();
+    if (typeof cwRenderTodayAddon === 'function') cwRenderTodayAddon();
   }
 }
 
@@ -13970,6 +13972,17 @@ function openFocusMode() {
     }
   }
 
+  // Append custom add-on exercises for today
+  const cwAddon = (typeof cwTodayLoad === 'function') ? cwTodayLoad() : null;
+  if (cwAddon && cwAddon.date === slToday()) {
+    const existing = new Set(_fmExercises.map(e => e.key));
+    cwAddon.exercises.forEach(key => {
+      if (!existing.has(key) && EX[key]) {
+        _fmExercises.push({ key, target: 'Custom Add-On', isCustom: true });
+      }
+    });
+  }
+
   renderFocusModeExercises();
   document.getElementById('focusMode').classList.add('open');
   lockBodyScroll();
@@ -14218,6 +14231,17 @@ function buildSessionCard(phaseId, dow) {
     const target = setsEl ? setsEl.textContent.trim() : '';
     exercises.push({ key, target });
   });
+
+  // Append custom add-on exercises for today
+  const cwAddon = (typeof cwTodayLoad === 'function') ? cwTodayLoad() : null;
+  if (cwAddon && cwAddon.date === slToday()) {
+    const existing = new Set(exercises.map(e => e.key));
+    cwAddon.exercises.forEach(key => {
+      if (!existing.has(key) && EX[key]) {
+        exercises.push({ key, target: 'Custom', isCustom: true });
+      }
+    });
+  }
 
   if (!exercises.length) return `
     <div class="session-card">
@@ -15404,15 +15428,23 @@ function cwRenderTodayAddon() {
     <span>Today's Add-Ons</span>
     <span onclick="cwClearToday()" style="cursor:pointer;color:var(--text3);font-size:11px">✕ Clear</span>
   </div>`;
+  const logData = slLoad();
+  const todayLog = logData[slToday()] || {};
   data.exercises.forEach(key => {
     const ex = EX[key];
     if (!ex) return;
-    html += `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px">
+    const sets = todayLog[key] || [];
+    const hasSets = sets.length > 0;
+    const btnLabel = hasSets ? `✓ ${sets.length} set${sets.length > 1 ? 's' : ''}` : 'LOG';
+    const btnStyle = hasSets
+      ? 'padding:7px 14px;border-radius:8px;background:rgba(201,168,76,.2);border:1px solid var(--gold);color:var(--gold);font-family:\'Bebas Neue\',sans-serif;font-size:14px;cursor:pointer'
+      : 'padding:7px 14px;border-radius:8px;background:var(--gold);border:none;color:#111;font-family:\'Bebas Neue\',sans-serif;font-size:14px;cursor:pointer';
+    html += `<div data-ex-key="${key}" style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px">
       <div style="flex:1">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--text);letter-spacing:.03em">${ex.name}</div>
-        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">${((SORE_EX_MAP[key]||[])[0]||'').toUpperCase()}</div>
+        <div class="ex-last-session" style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">${hasSets ? sets.map(s => slFormatSet(s, key)).join(' · ') : ((SORE_EX_MAP[key]||[])[0]||'').toUpperCase()}</div>
       </div>
-      <button onclick="openLogSheet('${key}')" style="padding:7px 14px;border-radius:8px;background:var(--gold);border:none;color:#111;font-family:'Bebas Neue',sans-serif;font-size:14px;cursor:pointer">LOG</button>
+      <button class="log-set-btn${hasSets ? ' has-sets' : ''}" onclick="openLogSheet('${key}')" style="${btnStyle}">${btnLabel}</button>
     </div>`;
   });
   if (data.cardio) {
