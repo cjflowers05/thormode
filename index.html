@@ -991,6 +991,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .session-ex-row:active{background:var(--bg3)}
 .session-ex-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s}
 .session-ex-check.done{background:#60D090;border-color:#60D090;color:#0A0A08}
+.session-ex-check.skipped{background:var(--bg3);border-color:var(--border);color:var(--text3)}
+.session-ex-row.skipped .session-ex-name{text-decoration:line-through;color:var(--text3)}
+.session-log-btn.skipped{border-color:var(--border);color:var(--text3);background:transparent;font-size:9px}
 .session-ex-info{flex:1;min-width:0}
 .session-ex-name{font-size:13px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .session-ex-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
@@ -3848,6 +3851,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         </div>
       </div>
       <button class="sl-log-btn" id="sl-log-btn" onclick="slLogSet()">LOG SET</button>
+      <div id="sl-skip-row" style="text-align:center;margin-top:10px">
+        <button id="sl-skip-btn" onclick="slSkipToggle()" style="background:none;border:none;color:var(--text3);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.06em;cursor:pointer;padding:4px 10px;border-radius:6px;transition:color .15s">⊘ Skip this exercise</button>
+      </div>
     </div>
   </div>
 </div>
@@ -13056,6 +13062,7 @@ function openLogSheet(key) {
 
   slRenderSheet();
   renderWarmup();
+  slUpdateSkipBtn();
   document.getElementById('slModal').classList.add('open');
   lockBodyScroll();
 }
@@ -14007,12 +14014,26 @@ function renderFocusModeExercises() {
   const todayLog = log[today] || {};
   const prs      = slLoadPRs();
 
-  let doneCount = 0;
+  const fmSkipped = new Set(skipExLoad()[today] || []);
+  let doneCount = 0, fmActive = 0;
   const rows = _fmExercises.map(({ key, target }) => {
-    const ex     = (typeof EX !== 'undefined' && EX[key]) || {};
-    const sets   = todayLog[key] || [];
-    const done   = sets.length > 0;
-    if (done) doneCount++;
+    const ex      = (typeof EX !== 'undefined' && EX[key]) || {};
+    const sets    = todayLog[key] || [];
+    const done    = sets.length > 0;
+    const skipped = fmSkipped.has(key) && !done;
+    if (!skipped) fmActive++;
+    if (done)     doneCount++;
+
+    if (skipped) {
+      return `<div class="fm-ex-row" style="opacity:.45" onclick="event.stopPropagation()">
+        <div class="fm-ex-check" style="color:var(--text3);font-size:13px">⊘</div>
+        <div class="fm-ex-info">
+          <div class="fm-ex-name" style="text-decoration:line-through;color:var(--text3)">${ex.name || key}</div>
+          <div class="fm-ex-target">Skipped</div>
+        </div>
+        <div class="fm-ex-log" onclick="unskipEx('${key}');event.stopPropagation()" style="font-size:9px;color:var(--text3);cursor:pointer">↩ Restore</div>
+      </div>`;
+    }
 
     const chips = sets.map(s => {
       const e1rm = slEpley(s.w, s.r);
@@ -14036,12 +14057,12 @@ function renderFocusModeExercises() {
 
   wrap.innerHTML = rows;
 
-  // Update progress
-  const pct   = _fmExercises.length ? Math.round(doneCount / _fmExercises.length * 100) : 0;
+  // Update progress (skipped excluded from denominator)
+  const pct   = fmActive ? Math.round(doneCount / fmActive * 100) : 0;
   const fill  = document.getElementById('fm-prog-fill');
   const label = document.getElementById('fm-prog-label');
   if (fill)  fill.style.width  = pct + '%';
-  if (label) label.textContent = `${doneCount} / ${_fmExercises.length} exercises started`;
+  if (label) label.textContent = `${doneCount} / ${fmActive} exercises started`;
 }
 
 // Expose so slLogSet can call it
@@ -14116,6 +14137,57 @@ function deleteSkip(date) {
   delete d[date];
   skipSave(d);
   renderTracker();
+}
+
+// ── Per-exercise skip (separate from whole-day skip) ──────────
+const SKIP_EX_KEY = 'thor-skip-ex';
+function skipExLoad() { try { return JSON.parse(localStorage.getItem(SKIP_EX_KEY)||'{}'); } catch(e) { return {}; } }
+function skipExSave(d) { localStorage.setItem(SKIP_EX_KEY, JSON.stringify(d)); }
+
+function isExSkipped(key) {
+  const d = skipExLoad();
+  return !!(d[slToday()] || []).includes(key);
+}
+
+function skipEx(key) {
+  const d = skipExLoad();
+  const today = slToday();
+  if (!d[today]) d[today] = [];
+  if (!d[today].includes(key)) d[today].push(key);
+  skipExSave(d);
+  _refreshAllLogViews();
+}
+
+function unskipEx(key) {
+  const d = skipExLoad();
+  const today = slToday();
+  d[today] = (d[today] || []).filter(k => k !== key);
+  if (!d[today].length) delete d[today];
+  skipExSave(d);
+  _refreshAllLogViews();
+}
+
+function _refreshAllLogViews() {
+  if (typeof refreshSessionTracker === 'function') refreshSessionTracker();
+  if (typeof refreshFocusMode      === 'function') refreshFocusMode();
+  if (typeof cwRenderTodayAddon    === 'function') cwRenderTodayAddon();
+  slUpdateSkipBtn();
+}
+
+// Toggle from within the log sheet
+function slSkipToggle() {
+  if (!slCurrentKey) return;
+  if (isExSkipped(slCurrentKey)) unskipEx(slCurrentKey);
+  else skipEx(slCurrentKey);
+}
+
+// Sync the skip button label whenever the sheet is open
+function slUpdateSkipBtn() {
+  const btn = document.getElementById('sl-skip-btn');
+  if (!btn || !slCurrentKey) return;
+  const skipped = isExSkipped(slCurrentKey);
+  btn.textContent = skipped ? '↩ Restore exercise' : '⊘ Skip this exercise';
+  btn.style.color = skipped ? 'var(--gold)' : 'var(--text3)';
 }
 
 let _sessionOpen = true;
@@ -14258,12 +14330,27 @@ function buildSessionCard(phaseId, dow) {
   const todayLog = log[today] || {};
   const prs      = slLoadPRs();
 
-  let doneCount = 0;
+  const skippedToday = new Set(skipExLoad()[today] || []);
+  let doneCount = 0, activeCount = 0;
   const rows = exercises.map(({ key, target }) => {
-    const ex      = EX[key] || {};
-    const sets    = todayLog[key] || [];
-    const hasSets = sets.length > 0;
-    if (hasSets) doneCount++;
+    const ex       = EX[key] || {};
+    const sets     = todayLog[key] || [];
+    const hasSets  = sets.length > 0;
+    const skipped  = skippedToday.has(key);
+    if (!skipped) activeCount++;
+    if (hasSets)  doneCount++;
+
+    if (skipped && !hasSets) {
+      return `
+        <div class="session-ex-row skipped" onclick="event.stopPropagation()">
+          <div class="session-ex-check skipped">⊘</div>
+          <div class="session-ex-info">
+            <div class="session-ex-name">${ex.name || key}</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">Skipped today</div>
+          </div>
+          <button class="session-log-btn skipped" onclick="unskipEx('${key}');event.stopPropagation()">↩ Restore</button>
+        </div>`;
+    }
 
     const chips = sets.map(s => {
       const e1rm = slEpley(s.w, s.r);
@@ -14294,7 +14381,7 @@ function buildSessionCard(phaseId, dow) {
       </div>`;
   }).join('');
 
-  const pct = exercises.length ? Math.round(doneCount / exercises.length * 100) : 0;
+  const pct = activeCount ? Math.round(doneCount / activeCount * 100) : 0;
 
   // Day picker pills — one per weekday in this phase
   const phDaysAll = TODAY_PHASE_DAYS[phaseId] || {};
@@ -14315,7 +14402,7 @@ function buildSessionCard(phaseId, dow) {
         <span class="session-card-title">Session tracker</span>
         <div style="display:flex;align-items:center;gap:7px">
           <button class="focus-mode-btn" onclick="openFocusMode();event.stopPropagation()">⚡ Focus</button>
-          <span class="session-progress-pill">${doneCount} / ${exercises.length} started</span>
+          <span class="session-progress-pill">${doneCount} / ${activeCount} started</span>
         </div>
       </div>
       <div class="session-ex-list">${rows}</div>
